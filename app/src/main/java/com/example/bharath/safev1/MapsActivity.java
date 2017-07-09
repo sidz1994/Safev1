@@ -20,7 +20,6 @@ import android.util.Log;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
-import android.widget.Toast;
 
 import com.android.volley.AuthFailureError;
 import com.android.volley.Request;
@@ -44,15 +43,15 @@ import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.iid.FirebaseInstanceId;
 
 import org.apache.commons.io.IOUtils;
-import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.BufferedInputStream;
+import java.io.BufferedOutputStream;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.InputStreamReader;
+import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -245,7 +244,7 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
     public void onClick(View v) {
         switch (v.getId()) {
             case R.id.Alert:
-                sendatatoserver();
+                alertnearby();
                 break;
             case R.id.post:
                 postData();
@@ -266,18 +265,77 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
 
     }
 
-    public void sendatatoserver(){
+    public void alertnearby(){
+        JSONObject jsonObjectobj = new JSONObject();
+        try {
+            jsonObjectobj.put("table" , "alert");
+            jsonObjectobj.put("uid" , Uid);
+            jsonObjectobj.put("lat" , String.valueOf(postlat));
+            jsonObjectobj.put("long" , String.valueOf(postlong));
+            }
+        catch (JSONException e) {
+            Log.d("JWP","Can't format JSON");
+        }
+        if (jsonObjectobj.length() > 0) {
+            new SendJsonDataToServer().execute(String.valueOf(jsonObjectobj));
+        }
+    }
+
+    private class SendJsonDataToServer extends AsyncTask<String,String,String> {
+        private static final String TAG = "";
+
+        @Override
+        protected String doInBackground(String... params) {
+            String JsonResponse = null;
+            String JsonDATA = params[0];
+            HttpURLConnection urlConnection = null;
+            BufferedReader reader = null;
+            URL url = null;
+            try {
+                url = new URL("http://192.168.0.11:4000/");
+            } catch (MalformedURLException e) {
+                e.printStackTrace();
+            }
+            Log.i("xnxxx",url.toString());//not required
+            try {
+                urlConnection = (HttpURLConnection) url.openConnection();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            try {
+                urlConnection.setDoOutput(true);
+                urlConnection.setChunkedStreamingMode(0);
+                OutputStream out = new BufferedOutputStream(urlConnection.getOutputStream());
+                out.write(JsonDATA.getBytes());
+                out.flush();
+                Log.i("xnxxx","writr closed");//not required
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            finally {
+                if (urlConnection != null) {
+                    urlConnection.disconnect();
+                    Log.i("xnxxx","disoconeec");//not required
+                }
+            }
+            return null;
+        }
+    }
+
+
+
+    /* public void alertnearby(){
         int templat= (int) Math.ceil(Double.parseDouble(String.valueOf(postlat)));
         int templong= (int) Math.ceil(Double.parseDouble(String.valueOf(postlong)))*-1;
         newurl ="http://127.0.0.1:8000/location/updateLoc?user_id="+Uid+"&latlong="+templat+","+templong ;
-                //"http://www.telusko.com/addition.htm?t1="+templat+"&t2="+templong;
+
         new SendJsonDataToServer().execute(newurl);
         mMap.clear();
         for(int i = 0 ; i < contactList.size() ; i++ ) {
 
             createMarker(Double.parseDouble(contactList.get(i).get("Lat")), Double.parseDouble(contactList.get(i).get("Long")),contactList.get(i).get("Name"));
         }
-    }
+    }*/
     protected Marker createMarker(double latitude, double longitude, String name) {
 
         return mMap.addMarker(new MarkerOptions()
@@ -380,108 +438,8 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
         }
     }
 
-    private class SendJsonDataToServer extends AsyncTask<String,String,String> {
-
-        @Override
-        protected void onPreExecute(){
-            super.onPreExecute();
-        }
 
 
-        @Override
-        protected void onPostExecute(String s){
-           // super.onPostExecute(s);
-            Toast.makeText(MapsActivity.this, "act "+s, Toast.LENGTH_SHORT).show();
-
-        }
 
 
-        @Override
-        protected String doInBackground(String... params) {
-            try{
-
-                URL url=new URL(params[0]);
-                HttpURLConnection con=(HttpURLConnection) url.openConnection();
-                con.setRequestMethod("GET");
-                con.connect();
-
-                BufferedReader bf= new BufferedReader(new InputStreamReader(con.getInputStream()));
-                String val=bf.readLine();
-                System.out.println(val);
-                result=val;
-
-                //json code is added here
-                HttpHandler sh = new HttpHandler();
-
-                String jsonStr = sh.makeServiceCall(url.toString());
-                Log.e(TAG, "Response from url: " + jsonStr);
-
-                if (jsonStr != null) {
-                    try {
-                        JSONObject jsonObj = new JSONObject(jsonStr);
-
-                        // Getting JSON Array node
-                        JSONArray contacts = jsonObj.getJSONArray("contacts");
-
-                        // looping through All Contacts
-                        for (int i = 0; i < contacts.length(); i++) {
-                            JSONObject c = contacts.getJSONObject(i);
-
-                            String id = c.getString("id");
-                            String Lat = c.getString("Lat");
-                            String Long = c.getString("Long");
-                            String name = c.getString("name");
-                            String gender = c.getString("gender");
-                            String age = c.getString("age");
-                            String mobile = c.getString("mobile");
-
-                            // tmp hash map for single contact
-                            HashMap<String, String> contact = new HashMap<>();
-
-                            // adding each child node to HashMap key => value
-                            contact.put("id", id);
-                            contact.put("name", name);
-                            contact.put("mobile", mobile);
-                            contact.put("latitude", Lat);
-                            contact.put("longitude", Long);
-                        }
-                    } catch (final JSONException e) {
-                        Log.e(TAG, "Json parsing error: " + e.getMessage());
-                        runOnUiThread(new Runnable() {
-                            @Override
-                            public void run() {
-                                Toast.makeText(getApplicationContext(),
-                                        "Json parsing error: " + e.getMessage(),
-                                        Toast.LENGTH_LONG)
-                                        .show();
-                            }
-                        });
-
-                    }
-                }
-                else {
-                    Log.e(TAG, "Couldn't get json from server.");
-                    runOnUiThread(new Runnable() {
-                        @Override
-                        public void run() {
-                            Toast.makeText(getApplicationContext(),
-                                    "Couldn't get json from server. Check LogCat for possible errors!",
-                                    Toast.LENGTH_LONG)
-                                    .show();
-                        }
-                    });
-
-                }
-
-
-                            //till here
-
-            } catch (MalformedURLException e) {
-                e.printStackTrace();
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-            return result;
-        }
-    }
-}
+}//on nsvigation end

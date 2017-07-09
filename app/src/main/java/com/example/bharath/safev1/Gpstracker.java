@@ -34,7 +34,7 @@ public class Gpstracker extends Service implements LocationListener {
     double longitude; // longitude
 
     // The minimum distance to change Updates in meters
-    private static final long MIN_DISTANCE_CHANGE_FOR_UPDATES = 10; // 10 meters
+    private static final long MIN_DISTANCE_CHANGE_FOR_UPDATES = 100; // 100 meters
 
     // The minimum time between updates in milliseconds
     private static final long MIN_TIME_BW_UPDATES = 1000 * 60 * 1; // 1 minute
@@ -61,6 +61,22 @@ public class Gpstracker extends Service implements LocationListener {
                     .isProviderEnabled(LocationManager.NETWORK_PROVIDER);
 
             if (!isGPSEnabled && !isNetworkEnabled) {
+                String gpsStatus;
+                String netStatus;
+
+                if(isGPSEnabled){
+                    gpsStatus = "Enabled";
+                }else{
+                    gpsStatus = "Disabled";
+                }
+
+                if(isNetworkEnabled){
+                    netStatus = "Enabled";
+                }else{
+                    netStatus = "Disabled";
+                }
+                showSettingsAlert(netStatus,gpsStatus);
+
                 // no network provider is enabled
             } else {
                 this.canGetLocation = true;
@@ -172,6 +188,13 @@ public class Gpstracker extends Service implements LocationListener {
         // Setting Dialog Message
         alertDialog.setMessage("GPS is not enabled. Do you want to go to settings menu?");
 
+        /*
+        "To participate inDrop you need your location enabled." +
+                        "\n\nWe recommend enabling both GPS Satelite and mobile Network Location for improved accuracy." +
+                        "\n\nYour Current Settings" +
+                        "\nGPS: "+gpsStatus+
+                        "\nNetwork: "+netStatus*/
+
         // On pressing Settings button
         alertDialog.setPositiveButton("Settings", new DialogInterface.OnClickListener() {
             public void onClick(DialogInterface dialog,int which) {
@@ -210,6 +233,43 @@ public class Gpstracker extends Service implements LocationListener {
     @Override
     public IBinder onBind(Intent arg0) {
         return null;
+    }
+
+
+    public void showSettingsAlert(String netStatus,String gpsStatus) {
+        AlertDialog.Builder alertDialog = new AlertDialog.Builder(mContext);
+
+        // Setting Dialog Title
+        alertDialog.setTitle("GPS is settings");
+
+        // Setting Dialog Message
+        //alertDialog.setMessage("Location Service is not enabled. Do you want to go to settings menu?");
+        alertDialog.setMessage("To participate inDrop you need your location enabled." +
+                "\n\nWe recommend enabling both GPS Satelite and mobile Network Location for improved accuracy." +
+                        "\n\nYour Current Settings" +
+                        "\nGPS: "+gpsStatus+
+                        "\nNetwork: "+netStatus);
+
+        // On pressing Settings button
+        alertDialog.setPositiveButton("Settings",
+                new DialogInterface.OnClickListener() {
+                    public void onClick(DialogInterface dialog, int which) {
+                        Intent intent = new Intent(
+                                Settings.ACTION_LOCATION_SOURCE_SETTINGS);
+                        mContext.startActivity(intent);
+                    }
+                });
+
+        // on pressing cancel button
+        alertDialog.setNegativeButton("Cancel",
+                new DialogInterface.OnClickListener() {
+                    public void onClick(DialogInterface dialog, int which) {
+                        dialog.cancel();
+                    }
+                });
+
+        // Showing Alert Message
+        alertDialog.show();
     }
 
 }

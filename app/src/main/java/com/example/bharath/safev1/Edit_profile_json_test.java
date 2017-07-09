@@ -102,6 +102,7 @@ public class Edit_profile_json_test extends AppCompatActivity implements View.On
         String uid=intent.getExtras().getString("uid");
 
         try {
+            jsonObjectobj.put("table" , "profile");
             jsonObjectobj.put("uid" , uid);
             jsonObjectobj.put("name" , name.getText().toString());
             jsonObjectobj.put("number", number.getText().toString());
