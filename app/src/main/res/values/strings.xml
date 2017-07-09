@@ -1,0 +1,16 @@
+<resources>
+    <string name="app_name">Safev1</string>
+    <string name="title_activity_maps">Safev1</string>
+    <string name="title_activity_main_menu">MainMenu</string>
+
+    <string name="navigation_drawer_open">Open navigation drawer</string>
+    <string name="navigation_drawer_close">Close navigation drawer</string>
+
+    <string name="action_settings">Settings</string>
+
+    <string name="FCM_PREF">com.example.bharath.safev1.fcm_pref</string>
+    <string name="FCM_TOKEN">com.example.bharath.safev1.fcm_pref</string>
+    <string name="title_activity_navigation_menu">NavigationMenu</string>
+    <string name="name">Name</string>
+    <string name="runs">Number</string>
+</resources>
