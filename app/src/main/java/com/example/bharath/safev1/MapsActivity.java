@@ -5,9 +5,12 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.location.Location;
+import android.net.Uri;
 import android.os.AsyncTask;
+import android.os.Build;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
+import android.support.annotation.RequiresApi;
 import android.support.design.widget.NavigationView;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.view.GravityCompat;
@@ -20,15 +23,21 @@ import android.util.Log;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
-import android.widget.Toast;
 
 import com.android.volley.AuthFailureError;
 import com.android.volley.Request;
 import com.android.volley.Response;
 import com.android.volley.VolleyError;
 import com.android.volley.toolbox.StringRequest;
+import com.google.android.gms.appindexing.Action;
+import com.google.android.gms.appindexing.AppIndex;
+import com.google.android.gms.appindexing.Thing;
+import com.google.android.gms.common.ConnectionResult;
+import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.common.api.Status;
 import com.google.android.gms.location.LocationListener;
+import com.google.android.gms.location.LocationRequest;
+import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.location.places.Place;
 import com.google.android.gms.location.places.ui.PlaceAutocompleteFragment;
 import com.google.android.gms.location.places.ui.PlaceSelectionListener;
@@ -64,12 +73,15 @@ import static com.example.bharath.safev1.R.id.map;
 
 
 public class MapsActivity extends AppCompatActivity implements OnMapReadyCallback,PlaceSelectionListener,
-        View.OnClickListener,LocationListener, NavigationView.OnNavigationItemSelectedListener{
+        View.OnClickListener,LocationListener, NavigationView.OnNavigationItemSelectedListener,  GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener {
 
     private GoogleMap mMap;
     private Gpstracker gpsTracker;
     private Location mLocation;
     double latitude, longitude;
+    double savelat=0.0,savelong=0.0;
+    private GoogleApiClient mgoogleapiclient;//july 9th for onlocationchanged code
+    private LocationRequest mlocrequest;//july 9th
 
     Button alert,post;
     String result="";
@@ -175,6 +187,12 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
         MySingleton.getmInstance(MapsActivity.this).addToRequest(stringRequest);
         //send token to server code till here
 
+        //july 9th
+        mgoogleapiclient = new GoogleApiClient.Builder(this)
+                .addApi(LocationServices.API)
+                .addConnectionCallbacks(this)
+                .addOnConnectionFailedListener(this)
+                .addApi(AppIndex.API).build();
     }
 
 
@@ -281,6 +299,85 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
             new SendJsonDataToServer().execute(String.valueOf(jsonObjectobj));
         }
     }
+//july 9th code below 3
+
+    @Override
+    protected void onStart() {
+        super.onStart();
+        mgoogleapiclient.connect();
+        AppIndex.AppIndexApi.start(mgoogleapiclient, getIndexApiAction());
+    }
+
+
+    @Override
+    protected void onStop() {
+        mgoogleapiclient.disconnect();
+        super.onStop();
+        AppIndex.AppIndexApi.end(mgoogleapiclient, getIndexApiAction());
+    }
+    public Action getIndexApiAction() {
+        Thing object = new Thing.Builder()
+                .setName("Main Page") // TODO: Define a title for the content shown.
+                // TODO: Make sure this auto-generated URL is correct.
+                .setUrl(Uri.parse("http://[ENTER-YOUR-URL-HERE]"))
+                .build();
+        return new Action.Builder(Action.TYPE_VIEW)
+                .setObject(object)
+                .setActionStatus(Action.STATUS_TYPE_COMPLETED)
+                .build();
+    }
+
+    //below 5 are added here on july 9th
+
+    @RequiresApi(api = Build.VERSION_CODES.M)
+    @Override
+    public void onConnected(Bundle bundle) {
+        mlocrequest = LocationRequest.create();
+        mlocrequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
+        mlocrequest.setInterval(1000);
+
+        if (ActivityCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED)
+
+        {
+            ActivityCompat.requestPermissions(this,new String[]{android.Manifest.permission.ACCESS_FINE_LOCATION}, 108);
+        }
+        LocationServices.FusedLocationApi.requestLocationUpdates(mgoogleapiclient, mlocrequest, this);
+    }
+
+    @Override
+    public void onConnectionSuspended(int i) {
+
+    }
+
+    @Override
+    public void onConnectionFailed(@NonNull ConnectionResult connectionResult) {
+
+    }
+    @Override
+    public void onLocationChanged(Location location){
+        //Toast.makeText(this,String.valueOf(latitude)+" "+String.valueOf(longitude),Toast.LENGTH_SHORT).show();
+        /*if(savelat==0.0 && savelong==0.0){
+            savelat=latitude;
+            savelong=longitude;
+        }*/
+        JSONObject jsonObjectobj = new JSONObject();
+        try {
+            jsonObjectobj.put("table" , "location");
+            jsonObjectobj.put("uid" , Uid);
+            jsonObjectobj.put("lat" , String.valueOf(latitude));
+            jsonObjectobj.put("long" , String.valueOf(longitude));
+        }
+        catch (JSONException e) {
+            Log.d("JWP","Can't format JSON");
+        }
+        if (jsonObjectobj.length() > 0) {
+            new SendJsonDataToServer().execute(String.valueOf(jsonObjectobj));
+        }
+    }
+
+
+
+
 
     private class SendJsonDataToServer extends AsyncTask<String,String,String> {
         private static final String TAG = "";
@@ -346,11 +443,11 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
                 );
     }
 
-    @Override
+  /*  @Override
     public void onLocationChanged(Location location) {
         Toast.makeText(this,String.valueOf(latitude)+" "+String.valueOf(longitude),Toast.LENGTH_SHORT).show();
     }
-
+*/
     //this code is for navigation menu
     @SuppressWarnings("StatementWithEmptyBody")
     @Override
@@ -438,9 +535,6 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
             //Update the UI
         }
     }
-
-
-
 
 
 }//on nsvigation end
