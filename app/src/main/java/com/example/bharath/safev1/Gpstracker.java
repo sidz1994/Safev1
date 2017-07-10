@@ -34,7 +34,7 @@ public class Gpstracker extends Service implements LocationListener {
     double longitude; // longitude
 
     // The minimum distance to change Updates in meters
-    private static final long MIN_DISTANCE_CHANGE_FOR_UPDATES = 100; // 100 meters
+    private static final long MIN_DISTANCE_CHANGE_FOR_UPDATES = 1; // 100 meters
 
     // The minimum time between updates in milliseconds
     private static final long MIN_TIME_BW_UPDATES = 1000 * 60 * 1; // 1 minute
@@ -216,6 +216,7 @@ public class Gpstracker extends Service implements LocationListener {
 
     @Override
     public void onLocationChanged(Location location) {
+ //       Toast.makeText(this,String.valueOf(latitude)+" "+String.valueOf(longitude),Toast.LENGTH_SHORT).show();
     }
 
     @Override
