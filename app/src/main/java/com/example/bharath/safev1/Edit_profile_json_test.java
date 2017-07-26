@@ -131,7 +131,7 @@ public class Edit_profile_json_test extends AppCompatActivity implements View.On
             BufferedReader reader = null;
             URL url = null;
             try {
-                url = new URL("http://192.168.0.11:4000/");
+                url = new URL("http://ec2-13-59-101-206.us-east-2.compute.amazonaws.com:4000/");
             } catch (MalformedURLException e) {
                 e.printStackTrace();
             }

@@ -40,6 +40,7 @@ public class Tab1 extends ListFragment implements SearchView.OnQueryTextListener
     private ArrayList<String> filterednumbers;
     private Cursor crContacts;
     private Context mContext;
+    public static String Data="";
     DatabaseHelper myDB;
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -61,6 +62,10 @@ public class Tab1 extends ListFragment implements SearchView.OnQueryTextListener
         super.onDetach();
     }
 
+    public static String getdata(){
+
+        return Data;
+    }
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
@@ -93,11 +98,13 @@ public class Tab1 extends ListFragment implements SearchView.OnQueryTextListener
         jobj = new JSONObject();
         try {
             jobj.put("data", arr);
-            Tab2 tab2=new Tab2();
+            Data=jobj.toString();
+            /*Tab2 tab2=new Tab2();
             Bundle args=new Bundle();
+
             args.putString("Contacts_json",jobj.toString());
             tab2.setArguments(args);
-            getFragmentManager().beginTransaction().add(R.id.container, tab2).commit();
+            getFragmentManager().beginTransaction().add(R.id.container, tab2).commit();*/
         } catch (JSONException e) {
             e.printStackTrace();
         }

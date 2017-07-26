@@ -14,14 +14,14 @@ import android.view.ViewGroup;
 public class Tab2 extends Fragment {
     private Context mContext;
     DatabaseHelper myDB;
+    public String contacts="";
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         mContext = getActivity();
         setHasOptionsMenu(true);
         myDB=new DatabaseHelper(mContext);
-        String contacts=getArguments().getString("Contacts_json");
-        System.out.println(contacts);
+        contacts=Tab1.getdata();
     }
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
@@ -29,5 +29,16 @@ public class Tab2 extends Fragment {
         View rootView = inflater.inflate(R.layout.tab2, container, false);
         return rootView;
     }
+
+    /*@Override
+    public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
+        //inflater.inflate(R.menu.menu_main, menu);
+        MenuItem searchItem = menu.findItem(R.id.menuSearch);
+         searchView = (SearchView) searchItem.getActionView();
+        searchView.setOnQueryTextListener(this);
+        searchView.setQueryHint("Search");
+        super.onCreateOptionsMenu(menu, inflater);
+    }*/
+
 
 }

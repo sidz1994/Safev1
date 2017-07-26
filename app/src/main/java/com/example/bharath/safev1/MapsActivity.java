@@ -1,5 +1,6 @@
 package com.example.bharath.safev1;
 
+import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -24,11 +25,6 @@ import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
 
-import com.android.volley.AuthFailureError;
-import com.android.volley.Request;
-import com.android.volley.Response;
-import com.android.volley.VolleyError;
-import com.android.volley.toolbox.StringRequest;
 import com.google.android.gms.appindexing.Action;
 import com.google.android.gms.appindexing.AppIndex;
 import com.google.android.gms.appindexing.Thing;
@@ -67,7 +63,6 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.Map;
 
 import static com.example.bharath.safev1.R.id.map;
 
@@ -82,6 +77,7 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
     double savelat=0.0,savelong=0.0;
     private GoogleApiClient mgoogleapiclient;//july 9th for onlocationchanged code
     private LocationRequest mlocrequest;//july 9th
+    MyReceiver myReceiver;
 
     Button alert,post;
     String result="";
@@ -164,8 +160,20 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
         SharedPreferences sharedPreferences=getApplicationContext().getSharedPreferences(getString(R.string.FCM_PREF), Context.MODE_PRIVATE);
         String ff = FirebaseInstanceId.getInstance().getToken();
         final String token=sharedPreferences.getString(getString(R.string.FCM_TOKEN),ff);
+        JSONObject jsonObjectobj = new JSONObject();
+        try {
+            jsonObjectobj.put("table" , "fcm_token");
+            jsonObjectobj.put("uid" , Uid);
+            jsonObjectobj.put("fcm_token" , token);
+        }
+        catch (JSONException e) {
+            Log.d("JWP","Can't format JSON");
+        }
+        if (jsonObjectobj.length() > 0) {
+            new SendJsonDataToServer().execute(String.valueOf(jsonObjectobj));
+        }
         //Toast.makeText(this,token,Toast.LENGTH_SHORT).show();//just to display the token
-        StringRequest stringRequest = new StringRequest(Request.Method.POST, app_server_url,
+        /*StringRequest stringRequest = new StringRequest(Request.Method.POST, app_server_url,
                 new Response.Listener<String>() {
                     @Override
                     public void onResponse(String response) {
@@ -184,8 +192,17 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
                 return params;
             }
         };
-        MySingleton.getmInstance(MapsActivity.this).addToRequest(stringRequest);
-        //send token to server code till here
+        MySingleton.getmInstance(MapsActivity.this).addToRequest(stringRequest);*/
+        //send token to server code till here*/
+
+
+        //token using broadcast receiver
+        /*Intent intent = new Intent(this, FcmInstanceIdService.class);
+        startService(intent);
+        myReceiver = new MyReceiver();
+        IntentFilter intentFilter = new IntentFilter();
+        intentFilter.addAction(FcmInstanceIdService.MY_ACTION);
+        registerReceiver(myReceiver, intentFilter);*/
 
         //july 9th
         mgoogleapiclient = new GoogleApiClient.Builder(this)
@@ -193,6 +210,22 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
                 .addConnectionCallbacks(this)
                 .addOnConnectionFailedListener(this)
                 .addApi(AppIndex.API).build();
+
+        //all users main table fill onec
+        jsonObjectobj = new JSONObject();  //working code
+        try {
+            jsonObjectobj.put("table" , "location");
+            jsonObjectobj.put("uid" , Uid);
+            jsonObjectobj.put("lat" , String.valueOf(latitude));
+            jsonObjectobj.put("long" , String.valueOf(longitude));
+        }
+        catch (JSONException e) {
+            Log.d("JWP","Can't format JSON");
+        }
+        if (jsonObjectobj.length() > 0) {
+            new SendJsonDataToServer().execute(String.valueOf(jsonObjectobj));
+        }
+
     }
 
 
@@ -232,8 +265,8 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
             newString= extras.getString("message");
              if(newString!=null){
                  String[] uservals = newString.split(",");
-                 LatLng vitimloc = new LatLng(Double.parseDouble(uservals[0]), Double.parseDouble(uservals[1]));
-                 mMap.addMarker(new MarkerOptions().position(vitimloc).title("help needed here.."));
+                 LatLng victimloc = new LatLng(Double.parseDouble(uservals[0]), Double.parseDouble(uservals[1]));
+                 mMap.addMarker(new MarkerOptions().position(victimloc).title("help needed here.."));
              }
         }
         mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(myloc, 15));
@@ -315,7 +348,8 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
         super.onStop();
         AppIndex.AppIndexApi.end(mgoogleapiclient, getIndexApiAction());
     }
-    public Action getIndexApiAction() {
+    public Action getIndexApiAction()
+    {
         Thing object = new Thing.Builder()
                 .setName("Main Page") // TODO: Define a title for the content shown.
                 // TODO: Make sure this auto-generated URL is correct.
@@ -349,35 +383,55 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
 
     }
 
+
     @Override
     public void onConnectionFailed(@NonNull ConnectionResult connectionResult) {
 
     }
     @Override
     public void onLocationChanged(Location location){
+        double dist1=geodistance(mLocation.getLatitude(),mLocation.getLongitude(),location.getLatitude(),location.getLongitude());
+        if(dist1>0.1){
+            JSONObject jsonObjectobj = new JSONObject();  //working code
+            try {
+                jsonObjectobj.put("table" , "location");
+                jsonObjectobj.put("uid" , Uid);
+                jsonObjectobj.put("lat" , String.valueOf(latitude));
+                jsonObjectobj.put("long" , String.valueOf(longitude));
+            }
+            catch (JSONException e) {
+                Log.d("JWP","Can't format JSON");
+            }
+            if (jsonObjectobj.length() > 0) {
+                new SendJsonDataToServer().execute(String.valueOf(jsonObjectobj));
+            }
+
+        }
         //Toast.makeText(this,String.valueOf(latitude)+" "+String.valueOf(longitude),Toast.LENGTH_SHORT).show();
-        /*if(savelat==0.0 && savelong==0.0){
-            savelat=latitude;
-            savelong=longitude;
-        }*/
-        JSONObject jsonObjectobj = new JSONObject();
-        try {
-            jsonObjectobj.put("table" , "location");
-            jsonObjectobj.put("uid" , Uid);
-            jsonObjectobj.put("lat" , String.valueOf(latitude));
-            jsonObjectobj.put("long" , String.valueOf(longitude));
-        }
-        catch (JSONException e) {
-            Log.d("JWP","Can't format JSON");
-        }
-        if (jsonObjectobj.length() > 0) {
-            new SendJsonDataToServer().execute(String.valueOf(jsonObjectobj));
-        }
     }
 
 
 
+    private double geodistance(double lat1, double lon1, double lat2, double lon2) {
+        double theta = lon1 - lon2;
+        double dist = Math.sin(deg2rad(lat1))
+                * Math.sin(deg2rad(lat2))
+                + Math.cos(deg2rad(lat1))
+                * Math.cos(deg2rad(lat2))
+                * Math.cos(deg2rad(theta));
+        dist = Math.acos(dist);
+        dist = rad2deg(dist);
+        dist = dist * 60 * 1.1515;
+        return (dist);
+    }
 
+    private double deg2rad(double deg) {
+        return (deg * Math.PI / 180.0);
+    }
+
+    private double rad2deg(double rad) {
+        return (rad * 180.0 / Math.PI);
+    }
 
     private class SendJsonDataToServer extends AsyncTask<String,String,String> {
         private static final String TAG = "";
@@ -390,6 +444,7 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
             BufferedReader reader = null;
             URL url = null;
             try {
+                //url = new URL("http://ec2-13-59-101-206.us-east-2.compute.amazonaws.com:4000/");
                 url = new URL("http://192.168.0.11:4000/");
             } catch (MalformedURLException e) {
                 e.printStackTrace();
@@ -422,18 +477,6 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
 
 
 
-    /* public void alertnearby(){
-        int templat= (int) Math.ceil(Double.parseDouble(String.valueOf(postlat)));
-        int templong= (int) Math.ceil(Double.parseDouble(String.valueOf(postlong)))*-1;
-        newurl ="http://127.0.0.1:8000/location/updateLoc?user_id="+Uid+"&latlong="+templat+","+templong ;
-
-        new SendJsonDataToServer().execute(newurl);
-        mMap.clear();
-        for(int i = 0 ; i < contactList.size() ; i++ ) {
-
-            createMarker(Double.parseDouble(contactList.get(i).get("Lat")), Double.parseDouble(contactList.get(i).get("Long")),contactList.get(i).get("Name"));
-        }
-    }*/
     protected Marker createMarker(double latitude, double longitude, String name) {
 
         return mMap.addMarker(new MarkerOptions()
@@ -443,11 +486,7 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
                 );
     }
 
-  /*  @Override
-    public void onLocationChanged(Location location) {
-        Toast.makeText(this,String.valueOf(latitude)+" "+String.valueOf(longitude),Toast.LENGTH_SHORT).show();
-    }
-*/
+
     //this code is for navigation menu
     @SuppressWarnings("StatementWithEmptyBody")
     @Override
@@ -533,6 +572,28 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
         @Override
         protected void onPostExecute(String result) {
             //Update the UI
+        }
+    }
+
+    //recieves fcm_token everytime it changes and sends to server
+    public class MyReceiver extends BroadcastReceiver
+    {
+        @Override
+        public void onReceive(Context context, Intent intent)
+        {
+            String fcm_token = intent.getStringExtra("fcm_token");
+            JSONObject jsonObjectobj = new JSONObject();
+            try {
+                jsonObjectobj.put("table" , "fcm_token");
+                jsonObjectobj.put("uid" , Uid);
+                jsonObjectobj.put("fcm_token" , fcm_token);
+            }
+            catch (JSONException e) {
+                Log.d("JWP","Can't format JSON");
+            }
+            if (jsonObjectobj.length() > 0) {
+                new SendJsonDataToServer().execute(String.valueOf(jsonObjectobj));
+            }
         }
     }
 
