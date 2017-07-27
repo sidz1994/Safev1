@@ -5,13 +5,16 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
+import android.graphics.Color;
 import android.location.Location;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Handler;
 import android.support.annotation.NonNull;
 import android.support.annotation.RequiresApi;
+import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.NavigationView;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.view.GravityCompat;
@@ -24,6 +27,7 @@ import android.util.Log;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
+import android.widget.Toast;
 
 import com.google.android.gms.appindexing.Action;
 import com.google.android.gms.appindexing.AppIndex;
@@ -48,7 +52,6 @@ import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.iid.FirebaseInstanceId;
 
-import org.apache.commons.io.IOUtils;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -57,6 +60,7 @@ import java.io.BufferedOutputStream;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
@@ -69,26 +73,18 @@ import static com.example.bharath.safev1.R.id.map;
 
 public class MapsActivity extends AppCompatActivity implements OnMapReadyCallback,PlaceSelectionListener,
         View.OnClickListener,LocationListener, NavigationView.OnNavigationItemSelectedListener,  GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener {
-
+    Handler handler;
     private GoogleMap mMap;
     private Gpstracker gpsTracker;
     private Location mLocation;
     double latitude, longitude;
-    double savelat=0.0,savelong=0.0;
     private GoogleApiClient mgoogleapiclient;//july 9th for onlocationchanged code
     private LocationRequest mlocrequest;//july 9th
     MyReceiver myReceiver;
-
+    private FloatingActionButton mLocationFAB;
     Button alert,post;
-    String result="";
     String postlat,postlong,Uid;
-    public static final String TAG = "YOUR-TAG-NAME";
-    String strurl = "http://www.telusko.com/addition.htm?t1=3&t2=-779";
-    String newurl="http://127.0.0.1:8000/location/updateLoc/user_id=uid&latlong=27,111";
-
-    //ArrayList<MarkerData> markersArray = new ArrayList<MarkerData>();
     ArrayList<HashMap<String, String>> contactList;
-    String app_server_url="http://10.0.0.16:801/safe/fcm_insert.php";
 
     private FirebaseAuth.AuthStateListener authListener;
     private FirebaseAuth auth;
@@ -107,6 +103,10 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
         toggle.syncState();
         NavigationView navigationView = (NavigationView) findViewById(R.id.nav_view);
         navigationView.setNavigationItemSelectedListener(this);
+
+       //set background color white for auto place fill fragment
+        android.app.Fragment firstFrag = getFragmentManager().findFragmentById(R.id.autocomplete_fragment);
+        firstFrag.getView().setBackgroundColor(Color.WHITE);
 
         //code for registering phone and assigning userid
         auth = FirebaseAuth.getInstance();
@@ -130,21 +130,23 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
             gpsTracker.showSettingsAlert();
         }
 
-            mLocation = gpsTracker.getLocation();
-            latitude = mLocation.getLatitude();
-            longitude = mLocation.getLongitude();
+        //floating action button
+        mLocationFAB = (FloatingActionButton) findViewById(R.id.myLocationButton);
+        mLocationFAB.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                // Toggle GPS position updates
+                movetomylocation();
+            }
+        });
 
-
-        //mLocation = gpsTracker.getLocation();
+        mLocation = gpsTracker.getLocation();
+        latitude = mLocation.getLatitude();
+        longitude = mLocation.getLongitude();
         alert = (Button) findViewById(R.id.Alert);
         alert.setOnClickListener(this);
         alert.setEnabled(true);
-        post = (Button) findViewById(R.id.post);
-        post.setOnClickListener(this);
-        post.setEnabled(true);
-        //pitre...turn on gps in phone and give permissions in settings later add code for it
-       // latitude = mLocation.getLatitude();
-        //longitude = mLocation.getLongitude();
+
         contactList = new ArrayList<>();
         profileDB=new Profile_Database(this);
         SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
@@ -226,8 +228,9 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
             new SendJsonDataToServer().execute(String.valueOf(jsonObjectobj));
         }
 
-    }
 
+
+    }
 
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
@@ -252,6 +255,13 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
         }
     }
 
+
+    public void movetomylocation(){
+        LatLng myloc = new LatLng(latitude, longitude);
+        mMap.addMarker(new MarkerOptions().position(myloc).title("Current location"));
+        mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(myloc, 15));
+
+    }
     @Override
     public void onMapReady(GoogleMap googleMap) {
         mMap = googleMap;
@@ -284,6 +294,18 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
         LatLng myloc = new LatLng(Double.parseDouble(uservals[0]), Double.parseDouble(uservals[1]));
         mMap.addMarker(new MarkerOptions().position(myloc).title("I'm here.."));
         mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(myloc, 15));
+        JSONObject jsonObjectobj = new JSONObject();
+        try {
+            jsonObjectobj.put("table" , "heat_map");
+            jsonObjectobj.put("lat" , String.valueOf(postlat));
+            jsonObjectobj.put("long" , String.valueOf(postlong));
+        }
+        catch (JSONException e) {
+            Log.d("JWP","Can't format JSON");
+        }
+        if (jsonObjectobj.length() > 0) {
+            new SendJsonDataToServer().execute(String.valueOf(jsonObjectobj));
+        }
     }
 
     @Override
@@ -298,24 +320,13 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
             case R.id.Alert:
                 alertnearby();
                 break;
-            case R.id.post:
-                postData();
-                break;
+
             default:
                 break;
 
         }
     }
 
-
-    public void postData(){
-        int templat= (int) Math.ceil(Double.parseDouble(String.valueOf(postlat)));
-        int templong= (int) Math.ceil(Double.parseDouble(String.valueOf(postlong)))*-1;
-        newurl ="http://127.0.0.1:8000/location/updateLoc?user_id="+Uid+"&latlong="+templat+","+templong ;
-        new sendhttpdata().execute(newurl);
-
-
-    }
 
     public void alertnearby(){
         JSONObject jsonObjectobj = new JSONObject();
@@ -438,7 +449,7 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
 
         @Override
         protected String doInBackground(String... params) {
-            String JsonResponse = null;
+            //String JsonResponse = null;
             String JsonDATA = params[0];
             HttpURLConnection urlConnection = null;
             BufferedReader reader = null;
@@ -461,6 +472,14 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
                 OutputStream out = new BufferedOutputStream(urlConnection.getOutputStream());
                 out.write(JsonDATA.getBytes());
                 out.flush();
+                InputStream in = new BufferedInputStream(urlConnection.getInputStream());
+                final String JsonResponse = convertStreamToString(in);
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        Toast.makeText(getApplicationContext(),JsonResponse,Toast.LENGTH_LONG).show();
+                    }
+                });
                 Log.i("xnxxx","writr closed");//not required
             } catch (IOException e) {
                 e.printStackTrace();
@@ -473,8 +492,32 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
             }
             return null;
         }
+
+
+
+
     }
 
+    private String convertStreamToString(InputStream is) {
+        BufferedReader reader = new BufferedReader(new InputStreamReader(is));
+        StringBuilder sb = new StringBuilder();
+
+        String line;
+        try {
+            while ((line = reader.readLine()) != null) {
+                sb.append(line).append('\n');
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        } finally {
+            try {
+                is.close();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+        return sb.toString();
+    }
 
 
     protected Marker createMarker(double latitude, double longitude, String name) {
@@ -518,62 +561,11 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
         } else if (id == R.id.nav_send) {
 
         }
-
-        DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
+            DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
         drawer.closeDrawer(GravityCompat.START);
         return true;
     }
 
-
-    private class sendhttpdata extends AsyncTask<String,String,String>{
-        @Override
-        protected void onPreExecute() {
-            super.onPreExecute();
-        }
-
-
-        @Override
-        protected String doInBackground(String... params) {
-
-            String urlString = params[0]; // URL to call
-
-            String resultToDisplay = "";
-
-            InputStream in = null;
-            try {
-
-                URL url = new URL(urlString);
-
-                HttpURLConnection urlConnection = (HttpURLConnection) url.openConnection();
-                urlConnection.setRequestMethod("POST");
-                urlConnection.connect();
-                in = new BufferedInputStream(urlConnection.getInputStream());
-
-
-            } catch (Exception e) {
-
-                System.out.println(e.getMessage());
-
-                return e.getMessage();
-
-            }
-
-            try {
-                resultToDisplay = IOUtils.toString(in, "UTF-8");
-                //to [convert][1] byte stream to a string
-            }
-            catch (IOException e) {
-                e.printStackTrace();
-            }
-            return resultToDisplay;
-        }
-
-
-        @Override
-        protected void onPostExecute(String result) {
-            //Update the UI
-        }
-    }
 
     //recieves fcm_token everytime it changes and sends to server
     public class MyReceiver extends BroadcastReceiver
@@ -596,6 +588,14 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
             }
         }
     }
+
+  /*  @Override
+    public void onLowMemory() {
+        super.onLowMemory();
+
+        gpsTracker.onLowMemory();
+    }
+*/
 
 
 }//on nsvigation end

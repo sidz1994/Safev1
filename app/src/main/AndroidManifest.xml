@@ -65,11 +65,12 @@
             android:name=".Contacts_Activity_Main"
             android:label="Contacts"
             android:theme="@style/AppTheme.NoActionBar" />
-
-        <activity android:name=".Profile_view"
-            android:label="Profile"></activity>
-        <activity android:name=".Edit_profile_json_test"
-            android:label="Profile"></activity>
+        <activity
+            android:name=".Profile_view"
+            android:label="Profile" />
+        <activity
+            android:name=".Edit_profile_json_test"
+            android:label="Profile" />
     </application>
 
 </manifest>
