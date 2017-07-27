@@ -455,8 +455,8 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
             BufferedReader reader = null;
             URL url = null;
             try {
-                //url = new URL("http://ec2-13-59-101-206.us-east-2.compute.amazonaws.com:4000/");
-                url = new URL("http://192.168.0.11:4000/");
+                url = new URL("http://ec2-13-59-101-206.us-east-2.compute.amazonaws.com:4000/");
+                //url = new URL("http://192.168.0.11:4000/");
             } catch (MalformedURLException e) {
                 e.printStackTrace();
             }
@@ -472,14 +472,18 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
                 OutputStream out = new BufferedOutputStream(urlConnection.getOutputStream());
                 out.write(JsonDATA.getBytes());
                 out.flush();
-                InputStream in = new BufferedInputStream(urlConnection.getInputStream());
-                final String JsonResponse = convertStreamToString(in);
-                runOnUiThread(new Runnable() {
-                    @Override
-                    public void run() {
-                        Toast.makeText(getApplicationContext(),JsonResponse,Toast.LENGTH_LONG).show();
-                    }
-                });
+                if(JsonDATA.contains("heat_map"))
+                {
+                    InputStream in = new BufferedInputStream(urlConnection.getInputStream());
+                    final String JsonResponse = convertStreamToString(in);
+                    runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            Toast.makeText(getApplicationContext(),JsonResponse+" contacts are near your location",Toast.LENGTH_LONG).show();
+                        }
+                    });
+                }
+
                 Log.i("xnxxx","writr closed");//not required
             } catch (IOException e) {
                 e.printStackTrace();
@@ -505,7 +509,7 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
         String line;
         try {
             while ((line = reader.readLine()) != null) {
-                sb.append(line).append('\n');
+                sb.append(line);
             }
         } catch (IOException e) {
             e.printStackTrace();
