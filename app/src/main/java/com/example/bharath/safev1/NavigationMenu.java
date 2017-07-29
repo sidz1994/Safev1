@@ -77,8 +77,6 @@ public class NavigationMenu extends AppCompatActivity
             Intent contacts_intent=new Intent(NavigationMenu.this,Contacts_Activity_Main.class);
             startActivity(contacts_intent);
 
-        } else if (id == R.id.nav_manage) {
-
         } else if (id == R.id.nav_share) {
 
         } else if (id == R.id.nav_send) {

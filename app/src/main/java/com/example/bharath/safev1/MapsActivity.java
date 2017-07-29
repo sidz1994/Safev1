@@ -28,7 +28,7 @@ import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
 import android.widget.Toast;
-
+import android.Manifest;
 import com.google.android.gms.appindexing.Action;
 import com.google.android.gms.appindexing.AppIndex;
 import com.google.android.gms.appindexing.Thing;
@@ -82,13 +82,15 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
     private LocationRequest mlocrequest;//july 9th
     MyReceiver myReceiver;
     private FloatingActionButton mLocationFAB;
-    Button alert,post;
+    Button alert;
     String postlat,postlong,Uid;
     ArrayList<HashMap<String, String>> contactList;
 
     private FirebaseAuth.AuthStateListener authListener;
     private FirebaseAuth auth;
     private static final int MY_PERMISSION_REQUEST_READ_CONTACTS=10;
+    private static final int MY_PERMISSION_REQUEST_ACCESS_FINE_LOCATION=11;
+    private static final int MY_PERMISSION_REQUEST_ACCESS_COARSE_LOCATION=12;
     Profile_Database profileDB;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -104,7 +106,7 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
         NavigationView navigationView = (NavigationView) findViewById(R.id.nav_view);
         navigationView.setNavigationItemSelectedListener(this);
 
-       //set background color white for auto place fill fragment
+        //set background color white for auto place fill fragment
         android.app.Fragment firstFrag = getFragmentManager().findFragmentById(R.id.autocomplete_fragment);
         firstFrag.getView().setBackgroundColor(Color.WHITE);
 
@@ -118,11 +120,7 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
 
         //PERMISSIONS TO READ CONTACTS
 
-        if(ActivityCompat.checkSelfPermission(this, android.Manifest.permission.READ_CONTACTS)
-                != PackageManager.PERMISSION_GRANTED){
-            ActivityCompat.requestPermissions(this,
-                    new String[] {android.Manifest.permission.READ_CONTACTS}, MY_PERMISSION_REQUEST_READ_CONTACTS);
-        }
+        getpermissions();
 
         //main activity starts here after registration
         gpsTracker = new Gpstracker(getApplicationContext());
@@ -236,22 +234,26 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
         switch (requestCode){
             case MY_PERMISSION_REQUEST_READ_CONTACTS:
-                /*if(grantResults.length>0 && grantResults[0]==PackageManager.PERMISSION_GRANTED){
-                    readContacts();
-                }*/
-                //else {
-                if(ActivityCompat.shouldShowRequestPermissionRationale(this,android.Manifest.permission.READ_CONTACTS)){
+                if(ActivityCompat.shouldShowRequestPermissionRationale(this,Manifest.permission.READ_CONTACTS)){
                     new AlertDialog.Builder(this).
                             setTitle("Read Contacts Permission").
                             setMessage("You need to grant read contacts permission to read contacts feature. Retry and grant it!").show();
                 }
-                else {
-                    new AlertDialog.Builder(this).
-                            setTitle("Read Contacts permission denied!").
-                            setMessage("You denied read ontacts permission. So, this feature will be disabled. To engage it, go on settings and grant read contacts permission for the application").show();
 
+            case MY_PERMISSION_REQUEST_ACCESS_FINE_LOCATION:
+                if(ActivityCompat.shouldShowRequestPermissionRationale(this,Manifest.permission.ACCESS_FINE_LOCATION)){
+                    new AlertDialog.Builder(this).
+                            setTitle("Location Permission").
+                            setMessage("You need to grant read contacts permission to read contacts feature. Retry and grant it!").show();
                 }
-                // }
+
+            case MY_PERMISSION_REQUEST_ACCESS_COARSE_LOCATION:
+                if(ActivityCompat.shouldShowRequestPermissionRationale(this,Manifest.permission.ACCESS_COARSE_LOCATION)){
+                    new AlertDialog.Builder(this).
+                            setTitle("Location Permission").
+                            setMessage("You need to grant read contacts permission to read contacts feature. Retry and grant it!").show();
+                }
+
         }
     }
 
@@ -269,15 +271,15 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
         postlat = String.valueOf(latitude);
         postlong = String.valueOf(longitude);
         mMap.addMarker(new MarkerOptions().position(myloc).title("Current location"));
-         if(getIntent().getExtras()!=null){
+        if(getIntent().getExtras()!=null){
             String newString="";
             Bundle extras = getIntent().getExtras();
             newString= extras.getString("message");
-             if(newString!=null){
-                 String[] uservals = newString.split(",");
-                 LatLng victimloc = new LatLng(Double.parseDouble(uservals[0]), Double.parseDouble(uservals[1]));
-                 mMap.addMarker(new MarkerOptions().position(victimloc).title("help needed here.."));
-             }
+            if(newString!=null){
+                String[] uservals = newString.split(",");
+                LatLng victimloc = new LatLng(Double.parseDouble(uservals[0]), Double.parseDouble(uservals[1]));
+                mMap.addMarker(new MarkerOptions().position(victimloc).title("help needed here.."));
+            }
         }
         mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(myloc, 15));
     }
@@ -335,7 +337,7 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
             jsonObjectobj.put("uid" , Uid);
             jsonObjectobj.put("lat" , String.valueOf(postlat));
             jsonObjectobj.put("long" , String.valueOf(postlong));
-            }
+        }
         catch (JSONException e) {
             Log.d("JWP","Can't format JSON");
         }
@@ -381,10 +383,10 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
         mlocrequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
         mlocrequest.setInterval(1000);
 
-        if (ActivityCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED)
+        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED)
 
         {
-            ActivityCompat.requestPermissions(this,new String[]{android.Manifest.permission.ACCESS_FINE_LOCATION}, 108);
+            ActivityCompat.requestPermissions(this,new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, 108);
         }
         LocationServices.FusedLocationApi.requestLocationUpdates(mgoogleapiclient, mlocrequest, this);
     }
@@ -455,18 +457,20 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
             BufferedReader reader = null;
             URL url = null;
             try {
-                url = new URL("http://ec2-13-59-101-206.us-east-2.compute.amazonaws.com:4000/");
-                //url = new URL("http://192.168.0.11:4000/");
+                //url = new URL("http://ec2-13-59-101-206.us-east-2.compute.amazonaws.com:4000/");
+                url = new URL("http://192.168.0.11:4000/");
             } catch (MalformedURLException e) {
                 e.printStackTrace();
             }
-            Log.i("xnxxx",url.toString());//not required
+
             try {
+                assert url != null;
                 urlConnection = (HttpURLConnection) url.openConnection();
             } catch (IOException e) {
                 e.printStackTrace();
             }
             try {
+                assert urlConnection != null;
                 urlConnection.setDoOutput(true);
                 urlConnection.setChunkedStreamingMode(0);
                 OutputStream out = new BufferedOutputStream(urlConnection.getOutputStream());
@@ -530,7 +534,7 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
                 .position(new LatLng(latitude, longitude))
                 .anchor(0.5f, 0.5f)
                 .title(name)
-                );
+        );
     }
 
 
@@ -543,29 +547,30 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
         if (id == R.id.nav_profile) {
             int profile_counts = profileDB.getProfilesCount();
             if(profile_counts!=0){
-            Intent profile_intent=new Intent(MapsActivity.this,Profile_view.class);
-            startActivity(profile_intent);
+                Intent profile_intent=new Intent(MapsActivity.this,Profile_view.class);
+                startActivity(profile_intent);
             }
             else{
                 Intent profile_intent=new Intent(MapsActivity.this,Edit_profile_json_test.class);//changed here
                 profile_intent.putExtra("uid",Uid);
                 startActivity(profile_intent);
-                }
+            }
         } else if (id == R.id.nav_contacts) {
             Intent contacts_intent=new Intent(MapsActivity.this,Contacts_Activity_Main.class);
             startActivity(contacts_intent);
-
         } else if (id == R.id.nav_logout) {
             profileDB.deleteData();
             Intent refresh_intent=new Intent(MapsActivity.this,MapsActivity.class);
             startActivity(refresh_intent);
-
-        } else if (id == R.id.nav_share) {
-
-        } else if (id == R.id.nav_send) {
-
+        } else if (id == R.id.nav_notification) {
+            Intent notifi_intent=new Intent(MapsActivity.this,Notification_activity.class);
+            startActivity(notifi_intent);
+        } else if (id == R.id.nav_settings) {
+            Intent settings_intent=new Intent(MapsActivity.this,Settings.class);
+            settings_intent.putExtra("uid",Uid);
+            startActivity(settings_intent);
         }
-            DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
+        DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
         drawer.closeDrawer(GravityCompat.START);
         return true;
     }
@@ -593,13 +598,32 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
         }
     }
 
-  /*  @Override
+    @Override
     public void onLowMemory() {
         super.onLowMemory();
 
         gpsTracker.onLowMemory();
     }
-*/
 
+
+    public void getpermissions()
+    {
+        if(ActivityCompat.checkSelfPermission(this, Manifest.permission.READ_CONTACTS)
+                != PackageManager.PERMISSION_GRANTED){
+            ActivityCompat.requestPermissions(this,
+                    new String[] {Manifest.permission.READ_CONTACTS}, MY_PERMISSION_REQUEST_READ_CONTACTS);
+        }
+
+        if(ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)
+                != PackageManager.PERMISSION_GRANTED || ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION)
+                != PackageManager.PERMISSION_GRANTED )
+        {
+            ActivityCompat.requestPermissions(this,
+                    new String[] {Manifest.permission.ACCESS_FINE_LOCATION}, MY_PERMISSION_REQUEST_ACCESS_FINE_LOCATION);
+            ActivityCompat.requestPermissions(this,
+                    new String[] {Manifest.permission.ACCESS_COARSE_LOCATION}, MY_PERMISSION_REQUEST_ACCESS_COARSE_LOCATION);
+        }
+
+    }
 
 }//on nsvigation end

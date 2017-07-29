@@ -13,6 +13,8 @@ import android.support.v4.app.NotificationCompat;
 import com.google.firebase.messaging.FirebaseMessagingService;
 import com.google.firebase.messaging.RemoteMessage;
 
+
+
 /**
  * Created by BHARATH on 19-May-17.
  */
@@ -33,6 +35,8 @@ public class FcmMessagingService extends FirebaseMessagingService {
         intent.putExtras(bundle);
         PendingIntent pendingIntent=PendingIntent.getActivity(this,0,intent,PendingIntent.FLAG_ONE_SHOT);
         NotificationCompat.Builder notificationBuilder =new NotificationCompat.Builder(this);
+        Uri alarmSound = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION);
+        notificationBuilder.setSound(alarmSound);
         notificationBuilder.setContentTitle(title);
         notificationBuilder.setContentText(message);
         notificationBuilder.setAutoCancel(true);
@@ -40,8 +44,6 @@ public class FcmMessagingService extends FirebaseMessagingService {
         notificationBuilder.setContentIntent(pendingIntent);
         NotificationManager notificationManager=(NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
         notificationManager.notify(0,notificationBuilder.build());
-        Uri alarmSound = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION);
-        notificationBuilder.setSound(alarmSound);
         //final String Loc=remoteMessage.getNotification().getBody();
 
       /*  mHandler = new Handler(Looper.getMainLooper());

@@ -71,6 +71,13 @@
         <activity
             android:name=".Edit_profile_json_test"
             android:label="Profile" />
+        <activity android:name=".Notification_activity" />
+        <activity android:name=".Settings" />
+
+        <service
+            android:name=".Senddata_service"
+            android:enabled="true"
+            android:exported="true"></service>
     </application>
 
 </manifest>
