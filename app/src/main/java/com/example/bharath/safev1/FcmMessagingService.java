@@ -15,10 +15,6 @@ import com.google.firebase.messaging.RemoteMessage;
 
 
 
-/**
- * Created by BHARATH on 19-May-17.
- */
-
 public class FcmMessagingService extends FirebaseMessagingService {
     private Handler mHandler;
 
@@ -32,6 +28,7 @@ public class FcmMessagingService extends FirebaseMessagingService {
         intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
         Bundle bundle=new Bundle();
         bundle.putString("message",message);
+        bundle.putString("name",title);
         intent.putExtras(bundle);
         PendingIntent pendingIntent=PendingIntent.getActivity(this,0,intent,PendingIntent.FLAG_ONE_SHOT);
         NotificationCompat.Builder notificationBuilder =new NotificationCompat.Builder(this);
@@ -44,17 +41,6 @@ public class FcmMessagingService extends FirebaseMessagingService {
         notificationBuilder.setContentIntent(pendingIntent);
         NotificationManager notificationManager=(NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
         notificationManager.notify(0,notificationBuilder.build());
-        //final String Loc=remoteMessage.getNotification().getBody();
 
-      /*  mHandler = new Handler(Looper.getMainLooper());
-        Runnable myRunnable = new Runnable() {
-            @Override
-            public void run() {
-                //Toast.makeText(FcmMessagingService.this,Loc,Toast.LENGTH_SHORT).show();
-                MapsActivity mapsActivity=new MapsActivity();
-                mapsActivity.displayalertloc(Loc);
-            }
-        };
-        mHandler.post(myRunnable);*/
       }
 }

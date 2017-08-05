@@ -1,5 +1,6 @@
 package com.example.bharath.safev1;
 
+import android.Manifest;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
@@ -12,6 +13,7 @@ import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
+import android.preference.PreferenceManager;
 import android.support.annotation.NonNull;
 import android.support.annotation.RequiresApi;
 import android.support.design.widget.FloatingActionButton;
@@ -28,7 +30,7 @@ import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
 import android.widget.Toast;
-import android.Manifest;
+
 import com.google.android.gms.appindexing.Action;
 import com.google.android.gms.appindexing.AppIndex;
 import com.google.android.gms.appindexing.Thing;
@@ -41,11 +43,13 @@ import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.location.places.Place;
 import com.google.android.gms.location.places.ui.PlaceAutocompleteFragment;
 import com.google.android.gms.location.places.ui.PlaceSelectionListener;
+import com.google.android.gms.maps.CameraUpdate;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.model.LatLngBounds;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.firebase.auth.FirebaseAuth;
@@ -85,13 +89,14 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
     Button alert;
     String postlat,postlong,Uid;
     ArrayList<HashMap<String, String>> contactList;
-
+    String victim_name="";
     private FirebaseAuth.AuthStateListener authListener;
     private FirebaseAuth auth;
     private static final int MY_PERMISSION_REQUEST_READ_CONTACTS=10;
     private static final int MY_PERMISSION_REQUEST_ACCESS_FINE_LOCATION=11;
     private static final int MY_PERMISSION_REQUEST_ACCESS_COARSE_LOCATION=12;
     Profile_Database profileDB;
+    private ArrayList<Marker> mMarkerArray = new ArrayList<Marker>();
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -156,10 +161,9 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
         autocompleteFragment.setOnPlaceSelectedListener(this);
 
 
+
         //below lines are added to send token to firebase
-        SharedPreferences sharedPreferences=getApplicationContext().getSharedPreferences(getString(R.string.FCM_PREF), Context.MODE_PRIVATE);
-        String ff = FirebaseInstanceId.getInstance().getToken();
-        final String token=sharedPreferences.getString(getString(R.string.FCM_TOKEN),ff);
+        String token = FirebaseInstanceId.getInstance().getToken();
         JSONObject jsonObjectobj = new JSONObject();
         try {
             jsonObjectobj.put("table" , "fcm_token");
@@ -172,37 +176,12 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
         if (jsonObjectobj.length() > 0) {
             new SendJsonDataToServer().execute(String.valueOf(jsonObjectobj));
         }
-        //Toast.makeText(this,token,Toast.LENGTH_SHORT).show();//just to display the token
-        /*StringRequest stringRequest = new StringRequest(Request.Method.POST, app_server_url,
-                new Response.Listener<String>() {
-                    @Override
-                    public void onResponse(String response) {
-                    }
-                },new Response.ErrorListener(){
-            @Override
-            public void onErrorResponse(VolleyError error) {
-
-            }
-        })
-        {
-            @Override
-            protected Map<String, String> getParams() throws AuthFailureError {
-                Map<String,String> params=new HashMap<String,String>();
-                params.put("fcm_token",token);
-                return params;
-            }
-        };
-        MySingleton.getmInstance(MapsActivity.this).addToRequest(stringRequest);*/
-        //send token to server code till here*/
 
 
-        //token using broadcast receiver
-        /*Intent intent = new Intent(this, FcmInstanceIdService.class);
-        startService(intent);
-        myReceiver = new MyReceiver();
-        IntentFilter intentFilter = new IntentFilter();
-        intentFilter.addAction(FcmInstanceIdService.MY_ACTION);
-        registerReceiver(myReceiver, intentFilter);*/
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
+        SharedPreferences.Editor editor = prefs.edit();
+        editor.putString("uid", Uid);
+        editor.apply();
 
         //july 9th
         mgoogleapiclient = new GoogleApiClient.Builder(this)
@@ -270,18 +249,45 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
         LatLng myloc = new LatLng(latitude, longitude);
         postlat = String.valueOf(latitude);
         postlong = String.valueOf(longitude);
-        mMap.addMarker(new MarkerOptions().position(myloc).title("Current location"));
+        Marker marker= mMap.addMarker(new MarkerOptions().position(myloc).title("Current location"));
+        mMarkerArray.add(marker);
         if(getIntent().getExtras()!=null){
-            String newString="";
+            String msg_String="";
+            String name_String="";
             Bundle extras = getIntent().getExtras();
-            newString= extras.getString("message");
-            if(newString!=null){
-                String[] uservals = newString.split(",");
-                LatLng victimloc = new LatLng(Double.parseDouble(uservals[0]), Double.parseDouble(uservals[1]));
-                mMap.addMarker(new MarkerOptions().position(victimloc).title("help needed here.."));
+            msg_String= extras.getString("message");
+            name_String=extras.getString("name");
+            if(name_String!=null){
+                String[] uservals = name_String.split(",");
+                victim_name=uservals[0];
             }
+            if(msg_String!=null){
+                String locvals = msg_String.substring(msg_String.lastIndexOf(":") + 1);
+                String[] uservals = locvals.split(",");
+                LatLng victimloc = new LatLng(Double.parseDouble(uservals[0]), Double.parseDouble(uservals[1]));
+                if(victim_name.isEmpty() )
+                    marker= mMap.addMarker(new MarkerOptions().position(victimloc).title("help needed here.."));
+                else
+                    marker=mMap.addMarker(new MarkerOptions().position(victimloc).title(victim_name));
+
+            }
+            mMarkerArray.add(marker);
+
+
+
+            LatLngBounds.Builder builder = new LatLngBounds.Builder();
+            for (Marker markers : mMarkerArray) {
+                builder.include(markers.getPosition());
+            }
+            LatLngBounds bounds = builder.build();
+            int width = getResources().getDisplayMetrics().widthPixels;
+            int height = getResources().getDisplayMetrics().heightPixels;
+            int padding = (int) (width * 0.12); // offset from edges of the map 12% of screen
+            CameraUpdate cu = CameraUpdateFactory.newLatLngBounds(bounds, width, height, padding);
+            mMap.moveCamera(cu);
         }
-        mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(myloc, 15));
+        else
+            mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(myloc, 15));
     }
 
 
@@ -404,7 +410,7 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
     @Override
     public void onLocationChanged(Location location){
         double dist1=geodistance(mLocation.getLatitude(),mLocation.getLongitude(),location.getLatitude(),location.getLongitude());
-        if(dist1>0.1){
+        if(dist1>100){
             JSONObject jsonObjectobj = new JSONObject();  //working code
             try {
                 jsonObjectobj.put("table" , "location");
@@ -457,8 +463,8 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
             BufferedReader reader = null;
             URL url = null;
             try {
-                //url = new URL("http://ec2-13-59-101-206.us-east-2.compute.amazonaws.com:4000/");
-                url = new URL("http://192.168.0.11:4000/");
+                url = new URL(getString(R.string.URL));
+                //url = new URL("http://192.168.0.11:4000/");
             } catch (MalformedURLException e) {
                 e.printStackTrace();
             }

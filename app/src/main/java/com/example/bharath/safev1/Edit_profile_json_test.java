@@ -1,8 +1,10 @@
 package com.example.bharath.safev1;
 
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.preference.PreferenceManager;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.View;
@@ -17,7 +19,6 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.BufferedOutputStream;
-import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.net.HttpURLConnection;
@@ -98,9 +99,8 @@ public class Edit_profile_json_test extends AppCompatActivity implements View.On
 
     public void senddatatoserver() {
         JSONObject jsonObjectobj = new JSONObject();
-        Intent intent=getIntent();
-        String uid=intent.getExtras().getString("uid");
-
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
+        String uid = prefs.getString("uid", null);
         try {
             jsonObjectobj.put("table" , "profile");
             jsonObjectobj.put("uid" , uid);
@@ -125,44 +125,40 @@ public class Edit_profile_json_test extends AppCompatActivity implements View.On
 
         @Override
         protected String doInBackground(String... params) {
-            String JsonResponse = null;
             String JsonDATA = params[0];
             HttpURLConnection urlConnection = null;
-            BufferedReader reader = null;
             URL url = null;
             try {
-                url = new URL("http://ec2-13-59-101-206.us-east-2.compute.amazonaws.com:4000/");
+                url = new URL(getString(R.string.URL));
             } catch (MalformedURLException e) {
                 e.printStackTrace();
             }
-            Log.i("xnxxx",url.toString());//not required
+
             try {
+                assert url != null;
                 urlConnection = (HttpURLConnection) url.openConnection();
             } catch (IOException e) {
                 e.printStackTrace();
             }
             try {
+                assert urlConnection != null;
                 urlConnection.setDoOutput(true);
                 urlConnection.setChunkedStreamingMode(0);
                 OutputStream out = new BufferedOutputStream(urlConnection.getOutputStream());
                 out.write(JsonDATA.getBytes());
                 out.flush();
-                Log.i("xnxxx","writr closed");//not required
             } catch (IOException e) {
                 e.printStackTrace();
-            }
-            finally {
+            } finally {
                 if (urlConnection != null) {
                     urlConnection.disconnect();
-                    Log.i("xnxxx","disoconeec");//not required
                 }
             }
             return null;
         }
     }
 
-
-    public void load_data_database(){
+        public void load_data_database(){
 
         if(check_all_values()){
             boolean isInserted= profileDB.insertprofiledata(name.getText().toString(),number.getText().toString(),email.getText().toString() ,pwd.getText().toString() ,age.getText().toString() ,blood_group,msg.getText().toString(),sex_group);

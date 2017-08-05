@@ -77,7 +77,10 @@
         <service
             android:name=".Senddata_service"
             android:enabled="true"
-            android:exported="true"></service>
+            android:exported="true" />
+        <service
+            android:name=".Stopservices_service"
+            android:exported="false"></service>
     </application>
 
 </manifest>

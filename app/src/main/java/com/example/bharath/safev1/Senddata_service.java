@@ -14,7 +14,6 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.BufferedOutputStream;
-import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.net.HttpURLConnection;
@@ -35,26 +34,10 @@ public class Senddata_service extends Service  {
         double latitude,longitude;
 
 
-        public LocationListener(String provider)
+        private LocationListener(String provider)
         {
             Log.e(TAG, "LocationListener " + provider);
             mLastLocation = new Location(provider);
-            latitude=mLastLocation.getLatitude();
-            longitude=mLastLocation.getLongitude();
-            JSONObject jsonObjectobj = new JSONObject();
-            try {
-                jsonObjectobj.put("table" , "alert");
-                jsonObjectobj.put("uid" , Uid);
-                jsonObjectobj.put("lat" , latitude);
-                jsonObjectobj.put("long" , longitude);
-
-            }
-            catch (JSONException e) {
-                Log.d("JWP","Can't format JSON");
-            }
-            if (jsonObjectobj.length() > 0) {
-                new SendJsonDataToServer().execute(String.valueOf(jsonObjectobj));
-            }
           }
 
         @Override
@@ -121,6 +104,7 @@ public class Senddata_service extends Service  {
     @Override
     public void onCreate()
     {
+        
         Log.e(TAG, "onCreate");
         initializeLocationManager();
         try {
@@ -172,14 +156,11 @@ public class Senddata_service extends Service  {
 
         @Override
         protected String doInBackground(String... params) {
-            //String JsonResponse = null;
             String JsonDATA = params[0];
             HttpURLConnection urlConnection = null;
-            BufferedReader reader = null;
             URL url = null;
             try {
-                //url = new URL("http://ec2-13-59-101-206.us-east-2.compute.amazonaws.com:4000/");
-                url = new URL("http://192.168.0.11:4000/");
+                url = new URL(getString(R.string.URL));
             } catch (MalformedURLException e) {
                 e.printStackTrace();
             }
@@ -208,9 +189,5 @@ public class Senddata_service extends Service  {
             }
             return null;
         }
-
-
-
-
     }
 }

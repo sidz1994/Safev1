@@ -45,10 +45,12 @@ public class Settings extends AppCompatActivity implements View.OnClickListener 
 
     public void notifieron()
     {
-        Intent intent = new Intent(this, Senddata_service.class);
-        intent.putExtra("uid",uid);
-        // use System.currentTimeMillis() to have a unique ID for the pending intent
-        PendingIntent pIntent = PendingIntent.getService(this, 0, intent, 0 );//PendingIntent.FLAG_UPDATE_CURRENT
+        Intent alert_intent = new Intent(this, Senddata_service.class);
+        alert_intent.putExtra("uid",uid);
+// use System.currentTimeMillis() to have a unique ID for the pending intent
+        PendingIntent p_alert_Intent = PendingIntent.getService(this, 0, alert_intent, 0 );//PendingIntent.FLAG_UPDATE_CURRENT
+        Intent stop_intent = new Intent(this, Stopservices_service.class);
+        PendingIntent p_stop_Intent = PendingIntent.getService(this, 0, stop_intent, 0 );//PendingIntent.FLAG_UPDATE_CURRENT
 
         NotificationCompat.Builder notificationBuilder =new NotificationCompat.Builder(this);
         notificationBuilder.setContentTitle("title");
@@ -57,14 +59,17 @@ public class Settings extends AppCompatActivity implements View.OnClickListener 
         notificationBuilder.setSmallIcon(R.mipmap.ic_launcher);
         notificationBuilder.setVisibility(1);//Notification.VISIBILITY_PUBLIC
         notificationBuilder.setPriority(2);//Notification.PRIORITY_MAX
-        notificationBuilder.setContentIntent(pIntent);
-        notificationBuilder.addAction(R.drawable.ic_notifications_black_24dp, "Alert", pIntent);
-        notificationBuilder.addAction(R.drawable.ic_notifications_black_24dp, "Track", pIntent);
-        notificationBuilder.addAction(R.drawable.ic_notifications_black_24dp, "Stop", pIntent);
+        notificationBuilder.setContentIntent(p_alert_Intent);
+        notificationBuilder.setOngoing(true);
+        NotificationCompat.Action alert_action = new NotificationCompat.Action.Builder(R.drawable.ic_notifications_black_24dp, "Alert", p_alert_Intent).build();
+        notificationBuilder.addAction(alert_action);
+        notificationBuilder.setContentIntent(p_stop_Intent);
+        NotificationCompat.Action track_action = new NotificationCompat.Action.Builder(R.drawable.ic_notifications_black_24dp, "Track", p_stop_Intent).build();
+        notificationBuilder.addAction(track_action);
+        NotificationCompat.Action stop_action = new NotificationCompat.Action.Builder(R.drawable.ic_notifications_black_24dp, "Stop", p_stop_Intent).build();
+        notificationBuilder.addAction(stop_action);
         NotificationManager notificationManager=(NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
         notificationManager.notify(0,notificationBuilder.build());
-
-
     }
 
     public void notifyoff()
