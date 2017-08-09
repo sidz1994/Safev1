@@ -14,13 +14,15 @@
         <TextView
             android:id="@+id/msg_onclick_name"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content" />
+            android:layout_height="wrap_content"
+            />
 
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:id="@+id/msg_onclick_msg"
-            android:paddingTop="10dp"/>
+            android:paddingTop="10dp"
+            />
 
         <Button
             android:id="@+id/msg_can_help"

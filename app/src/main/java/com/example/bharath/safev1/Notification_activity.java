@@ -10,23 +10,33 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
-
+import android.widget.AdapterView.OnItemLongClickListener;
 import java.util.ArrayList;
 
-public class Notification_activity extends ListActivity {
+public class Notification_activity extends ListActivity  {
     private ArrayList<String> victim_Names= new ArrayList<String>();
     private ArrayList<String> victim_msg= new ArrayList<String>();
     private Context mContext;
     Notifications_Database myDB;
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         mContext = getApplicationContext();
+        setContentView(R.layout.tab1);
+        ListView listView= getListView();
+        listView.setOnItemLongClickListener(new OnItemLongClickListener() {
+            public boolean onItemLongClick(AdapterView<?> arg0, View arg1, int position, long id) {
+                Toast.makeText(getApplicationContext(), " " + position , Toast.LENGTH_LONG).show();
+
+                return true;
+            }
+        });
+
         try {
             myDB = new Notifications_Database(mContext);
             Cursor cursor = myDB.getAllData();
@@ -47,16 +57,18 @@ public class Notification_activity extends ListActivity {
         } finally {
             myDB.close();
         }
+
         setListAdapter(new MyAdapter(this, android.R.layout.simple_list_item_1,
                 R.id.tvNameMain, victim_Names));
 
     }
 
 
+
     private class MyAdapter extends ArrayAdapter<String> {
 
         private MyAdapter(Context context, int resource, int textViewResourceId,
-                         ArrayList<String> conNames) {
+                          ArrayList<String> conNames) {
             super(context, resource, textViewResourceId, conNames);
 
         }
@@ -91,4 +103,6 @@ public class Notification_activity extends ListActivity {
         intent.putExtras(bundle);
         startActivity(intent);
     }
+
+
 }

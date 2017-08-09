@@ -17,9 +17,6 @@ import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
 
-/**
- * Created by BHARATH on 19-May-17.
- */
 
 public class FcmInstanceIdService extends FirebaseInstanceIdService {
 
