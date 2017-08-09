@@ -80,7 +80,9 @@
             android:exported="true" />
         <service
             android:name=".Stopservices_service"
-            android:exported="false"></service>
+            android:exported="false" />
+
+        <activity android:name=".Msgs_onclick"></activity>
     </application>
 
 </manifest>

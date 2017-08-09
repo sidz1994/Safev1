@@ -7,9 +7,6 @@ import android.database.DatabaseUtils;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 
-/**
- * Created by BHARATH on 18-Jun-17.
- */
 
 public class Profile_Database  extends SQLiteOpenHelper {
     public static final String database_name="profile.db";

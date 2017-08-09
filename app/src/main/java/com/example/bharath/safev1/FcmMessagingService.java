@@ -17,13 +17,16 @@ import com.google.firebase.messaging.RemoteMessage;
 
 public class FcmMessagingService extends FirebaseMessagingService {
     private Handler mHandler;
+    Notifications_Database notiDB;
+
 
     @Override
     public void onMessageReceived(RemoteMessage remoteMessage){
         String title=remoteMessage.getNotification().getTitle();
         String message=remoteMessage.getNotification().getBody();
-
-
+        notiDB=new Notifications_Database(this);
+        String[] uservals = title.split(":,:");
+        notiDB.insertdata(uservals[0],uservals[1],message);
         Intent intent =new Intent(this, MapsActivity.class);
         intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
         Bundle bundle=new Bundle();
@@ -34,7 +37,7 @@ public class FcmMessagingService extends FirebaseMessagingService {
         NotificationCompat.Builder notificationBuilder =new NotificationCompat.Builder(this);
         Uri alarmSound = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION);
         notificationBuilder.setSound(alarmSound);
-        notificationBuilder.setContentTitle(title);
+        notificationBuilder.setContentTitle(title+", needs help");
         notificationBuilder.setContentText(message);
         notificationBuilder.setAutoCancel(true);
         notificationBuilder.setSmallIcon(R.mipmap.ic_launcher);

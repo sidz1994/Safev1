@@ -3,7 +3,7 @@
     <string name="title_activity_maps">Safev1</string>
     <string name="title_activity_main_menu">MainMenu</string>
     <!--<string name="URL">http://ec2-13-59-246-173.us-east-2.compute.amazonaws.com:4000/</string> -->
-    <string name="URL">http://192.168.0.31/:4000/</string>
+    <string name="URL">http://192.168.0.11/:4000/</string>
     <string name="navigation_drawer_open">Open navigation drawer</string>
     <string name="navigation_drawer_close">Close navigation drawer</string>
 

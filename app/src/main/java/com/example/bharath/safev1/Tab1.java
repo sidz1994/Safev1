@@ -99,12 +99,6 @@ public class Tab1 extends ListFragment implements SearchView.OnQueryTextListener
         try {
             jobj.put("data", arr);
             Data=jobj.toString();
-            /*Tab2 tab2=new Tab2();
-            Bundle args=new Bundle();
-
-            args.putString("Contacts_json",jobj.toString());
-            tab2.setArguments(args);
-            getFragmentManager().beginTransaction().add(R.id.container, tab2).commit();*/
         } catch (JSONException e) {
             e.printStackTrace();
         }
