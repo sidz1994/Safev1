@@ -75,8 +75,8 @@ import java.util.HashMap;
 import static com.example.bharath.safev1.R.id.map;
 
 
-public class MapsActivity extends AppCompatActivity implements OnMapReadyCallback,PlaceSelectionListener,
-        View.OnClickListener,LocationListener, NavigationView.OnNavigationItemSelectedListener,  GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener {
+public class MapsActivity extends AppCompatActivity implements OnMapReadyCallback, PlaceSelectionListener,
+        View.OnClickListener, LocationListener, NavigationView.OnNavigationItemSelectedListener, GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener {
     Handler handler;
     private GoogleMap mMap;
     private Gpstracker gpsTracker;
@@ -87,16 +87,20 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
     MyReceiver myReceiver;
     private FloatingActionButton mLocationFAB;
     Button alert;
-    String postlat,postlong,Uid;
+    String postlat, postlong, Uid;
     ArrayList<HashMap<String, String>> contactList;
-    String victim_name="";
+    String victim_name = "";
     private FirebaseAuth.AuthStateListener authListener;
     private FirebaseAuth auth;
-    private static final int MY_PERMISSION_REQUEST_READ_CONTACTS=10;
-    private static final int MY_PERMISSION_REQUEST_ACCESS_FINE_LOCATION=11;
-    private static final int MY_PERMISSION_REQUEST_ACCESS_COARSE_LOCATION=12;
+    private static final int MY_PERMISSION_REQUEST_READ_CONTACTS = 10;
+    private static final int MY_PERMISSION_REQUEST_ACCESS_FINE_LOCATION = 11;
+    private static final int MY_PERMISSION_REQUEST_ACCESS_COARSE_LOCATION = 12;
     Profile_Database profileDB;
     private ArrayList<Marker> mMarkerArray = new ArrayList<Marker>();
+    JSONObject jsonObjectobj;
+    private boolean zoomed = false;
+    private boolean onplaceselected = false;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -118,40 +122,25 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
         //code for registering phone and assigning userid
         auth = FirebaseAuth.getInstance();
         final FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
-        if(user==null){
+        if (user == null) {
             startActivity(new Intent(MapsActivity.this, RegsiterActivity.class));
+            finish();
         }
-        if(user!=null){Uid=user.getUid();}
+        if (user != null) {
+            Uid = user.getUid();
+        }
 
         //PERMISSIONS TO READ CONTACTS
 
         getpermissions();
 
         //main activity starts here after registration
-        gpsTracker = new Gpstracker(getApplicationContext());
-        while(!gpsTracker.canGetLocation()) {
-            gpsTracker.showSettingsAlert();
-        }
-
-        //floating action button
-        mLocationFAB = (FloatingActionButton) findViewById(R.id.myLocationButton);
-        mLocationFAB.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                // Toggle GPS position updates
-                movetomylocation();
-            }
-        });
-
-        mLocation = gpsTracker.getLocation();
-        latitude = mLocation.getLatitude();
-        longitude = mLocation.getLongitude();
         alert = (Button) findViewById(R.id.Alert);
         alert.setOnClickListener(this);
         alert.setEnabled(true);
 
         contactList = new ArrayList<>();
-        profileDB=new Profile_Database(this);
+        profileDB = new Profile_Database(this);
         SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
                 .findFragmentById(map);
         mapFragment.getMapAsync(this);
@@ -161,17 +150,15 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
         autocompleteFragment.setOnPlaceSelectedListener(this);
 
 
-
         //below lines are added to send token to firebase
         String token = FirebaseInstanceId.getInstance().getToken();
-        JSONObject jsonObjectobj = new JSONObject();
+        jsonObjectobj = new JSONObject();
         try {
-            jsonObjectobj.put("table" , "fcm_token");
-            jsonObjectobj.put("uid" , Uid);
-            jsonObjectobj.put("fcm_token" , token);
-        }
-        catch (JSONException e) {
-            Log.d("JWP","Can't format JSON");
+            jsonObjectobj.put("table", "fcm_token");
+            jsonObjectobj.put("uid", Uid);
+            jsonObjectobj.put("fcm_token", token);
+        } catch (JSONException e) {
+            Log.d("JWP", "Can't format JSON");
         }
         if (jsonObjectobj.length() > 0) {
             new SendJsonDataToServer().execute(String.valueOf(jsonObjectobj));
@@ -191,43 +178,48 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
                 .addApi(AppIndex.API).build();
 
         //all users main table fill onec
-        jsonObjectobj = new JSONObject();  //working code
-        try {
-            jsonObjectobj.put("table" , "location");
-            jsonObjectobj.put("uid" , Uid);
-            jsonObjectobj.put("lat" , String.valueOf(latitude));
-            jsonObjectobj.put("long" , String.valueOf(longitude));
+        /*
+*/
+        gpsTracker = new Gpstracker(this);
+        if (gpsTracker.canGetLocation()) {
+            mLocation = gpsTracker.getLocation();
+            latitude = mLocation.getLatitude();
+            longitude = mLocation.getLongitude();
         }
-        catch (JSONException e) {
-            Log.d("JWP","Can't format JSON");
-        }
-        if (jsonObjectobj.length() > 0) {
-            new SendJsonDataToServer().execute(String.valueOf(jsonObjectobj));
-        }
+        //else {ifchecksuccess();}
 
 
+        //floating action button
+        mLocationFAB = (FloatingActionButton) findViewById(R.id.myLocationButton);
+        mLocationFAB.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                // Toggle GPS position updates
+                movetomylocation();
+            }
+        });
 
     }
 
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
-        switch (requestCode){
+        switch (requestCode) {
             case MY_PERMISSION_REQUEST_READ_CONTACTS:
-                if(ActivityCompat.shouldShowRequestPermissionRationale(this,Manifest.permission.READ_CONTACTS)){
+                if (ActivityCompat.shouldShowRequestPermissionRationale(this, Manifest.permission.READ_CONTACTS)) {
                     new AlertDialog.Builder(this).
                             setTitle("Read Contacts Permission").
                             setMessage("You need to grant read contacts permission to read contacts feature. Retry and grant it!").show();
                 }
 
             case MY_PERMISSION_REQUEST_ACCESS_FINE_LOCATION:
-                if(ActivityCompat.shouldShowRequestPermissionRationale(this,Manifest.permission.ACCESS_FINE_LOCATION)){
+                if (ActivityCompat.shouldShowRequestPermissionRationale(this, Manifest.permission.ACCESS_FINE_LOCATION)) {
                     new AlertDialog.Builder(this).
                             setTitle("Location Permission").
                             setMessage("You need to grant read contacts permission to read contacts feature. Retry and grant it!").show();
                 }
 
             case MY_PERMISSION_REQUEST_ACCESS_COARSE_LOCATION:
-                if(ActivityCompat.shouldShowRequestPermissionRationale(this,Manifest.permission.ACCESS_COARSE_LOCATION)){
+                if (ActivityCompat.shouldShowRequestPermissionRationale(this, Manifest.permission.ACCESS_COARSE_LOCATION)) {
                     new AlertDialog.Builder(this).
                             setTitle("Location Permission").
                             setMessage("You need to grant read contacts permission to read contacts feature. Retry and grant it!").show();
@@ -237,42 +229,43 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
     }
 
 
-    public void movetomylocation(){
+    public void movetomylocation() {
         LatLng myloc = new LatLng(latitude, longitude);
-        mMap.addMarker(new MarkerOptions().position(myloc).title("Current location"));
+        //mMap.addMarker(new MarkerOptions().position(myloc).title("Current location"));
         mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(myloc, 15));
 
     }
+
     @Override
     public void onMapReady(GoogleMap googleMap) {
         mMap = googleMap;
+        ifchecksuccess();
         LatLng myloc = new LatLng(latitude, longitude);
         postlat = String.valueOf(latitude);
         postlong = String.valueOf(longitude);
-        Marker marker= mMap.addMarker(new MarkerOptions().position(myloc).title("Current location"));
+        Marker marker = mMap.addMarker(new MarkerOptions().position(myloc).title("Current location"));
         mMarkerArray.add(marker);
-        if(getIntent().getExtras()!=null){
-            String msg_String="";
-            String name_String="";
+        if (getIntent().getExtras() != null) {
+            String msg_String = "";
+            String name_String = "";
             Bundle extras = getIntent().getExtras();
-            msg_String= extras.getString("message");
-            name_String=extras.getString("name");
-            if(name_String!=null){
+            msg_String = extras.getString("message");
+            name_String = extras.getString("name");
+            if (name_String != null) {
                 String[] uservals = name_String.split(",");
-                victim_name=uservals[0];
+                victim_name = uservals[0];
             }
-            if(msg_String!=null){
+            if (msg_String != null) {
                 String locvals = msg_String.substring(msg_String.lastIndexOf(":") + 1);
                 String[] uservals = locvals.split(",");
                 LatLng victimloc = new LatLng(Double.parseDouble(uservals[0]), Double.parseDouble(uservals[1]));
-                if(victim_name.isEmpty() )
-                    marker= mMap.addMarker(new MarkerOptions().position(victimloc).title("help needed here.."));
+                if (victim_name.isEmpty())
+                    marker = mMap.addMarker(new MarkerOptions().position(victimloc).title("help needed here.."));
                 else
-                    marker=mMap.addMarker(new MarkerOptions().position(victimloc).title(victim_name));
+                    marker = mMap.addMarker(new MarkerOptions().position(victimloc).title(victim_name));
 
             }
             mMarkerArray.add(marker);
-
 
 
             LatLngBounds.Builder builder = new LatLngBounds.Builder();
@@ -285,15 +278,27 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
             int padding = (int) (width * 0.12); // offset from edges of the map 12% of screen
             CameraUpdate cu = CameraUpdateFactory.newLatLngBounds(bounds, width, height, padding);
             mMap.moveCamera(cu);
-        }
-        else
+        } else
             mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(myloc, 15));
+        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            // TODO: Consider calling
+            //    ActivityCompat#requestPermissions
+            // here to request the missing permissions, and then overriding
+            //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
+            //                                          int[] grantResults)
+            // to handle the case where the user grants the permission. See the documentation
+            // for ActivityCompat#requestPermissions for more details.
+            return;
+        }
+        mMap.setMyLocationEnabled(true);
+        //UiSettings.setZoomControlsEnabled(true);
     }
 
 
     @Override
     public void onPlaceSelected(Place place) {
         mMap.clear();
+        onplaceselected=true;
         String userlatlng=String.valueOf(place.getLatLng());
         String requiredString = userlatlng.substring(userlatlng.indexOf("(") + 1, userlatlng.indexOf(")"));
         String[] uservals = requiredString.split(",");
@@ -409,26 +414,38 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
     }
     @Override
     public void onLocationChanged(Location location){
-        double dist1=geodistance(mLocation.getLatitude(),mLocation.getLongitude(),location.getLatitude(),location.getLongitude());
-        if(dist1>100){
-            JSONObject jsonObjectobj = new JSONObject();  //working code
-            try {
-                jsonObjectobj.put("table" , "location");
-                jsonObjectobj.put("uid" , Uid);
-                jsonObjectobj.put("lat" , String.valueOf(latitude));
-                jsonObjectobj.put("long" , String.valueOf(longitude));
-            }
-            catch (JSONException e) {
-                Log.d("JWP","Can't format JSON");
-            }
-            if (jsonObjectobj.length() > 0) {
-                new SendJsonDataToServer().execute(String.valueOf(jsonObjectobj));
-            }
 
+        if(mLocation!=null && mLocation.getLatitude()!=0.0 && mLocation.getLongitude()!=0.0 )
+        {
+            /*if(!onplaceselected){
+                mMap.clear();
+                LatLng myloc = new LatLng(mLocation.getLatitude(), mLocation.getLongitude());
+                //mMap.addMarker(new MarkerOptions().position(myloc).title("Current location"));
+                mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(myloc, 15));
+                if (!zoomed) {
+                    mMap.animateCamera(CameraUpdateFactory.zoomTo(12), 2000, null);
+                    zoomed = true;
+                }
+                onplaceselected=false;
+            }*/
+            double dist1=geodistance(mLocation.getLatitude(),mLocation.getLongitude(),location.getLatitude(),location.getLongitude());
+            if(dist1>0.01){
+                JSONObject jsonObjectobj = new JSONObject();  //working code
+                try {
+                    jsonObjectobj.put("table" , "location");
+                    jsonObjectobj.put("uid" , Uid);
+                    jsonObjectobj.put("lat" , String.valueOf(latitude));
+                    jsonObjectobj.put("long" , String.valueOf(longitude));
+                }
+                catch (JSONException e) {
+                    Log.d("JWP","Can't format JSON");
+                }
+                if (jsonObjectobj.length() > 0) {
+                    new SendJsonDataToServer().execute(String.valueOf(jsonObjectobj));
+                }
+            }
         }
-        //Toast.makeText(this,String.valueOf(latitude)+" "+String.valueOf(longitude),Toast.LENGTH_SHORT).show();
     }
-
 
 
     private double geodistance(double lat1, double lon1, double lat2, double lon2) {
@@ -457,14 +474,11 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
 
         @Override
         protected String doInBackground(String... params) {
-            //String JsonResponse = null;
             String JsonDATA = params[0];
             HttpURLConnection urlConnection = null;
-            BufferedReader reader = null;
             URL url = null;
             try {
                 url = new URL(getString(R.string.URL));
-                //url = new URL("http://192.168.0.11:4000/");
             } catch (MalformedURLException e) {
                 e.printStackTrace();
             }
@@ -493,23 +507,16 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
                         }
                     });
                 }
-
-                Log.i("xnxxx","writr closed");//not required
             } catch (IOException e) {
                 e.printStackTrace();
             }
             finally {
                 if (urlConnection != null) {
                     urlConnection.disconnect();
-                    Log.i("xnxxx","disoconeec");//not required
                 }
             }
             return null;
         }
-
-
-
-
     }
 
     private String convertStreamToString(InputStream is) {
@@ -531,16 +538,6 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
             }
         }
         return sb.toString();
-    }
-
-
-    protected Marker createMarker(double latitude, double longitude, String name) {
-
-        return mMap.addMarker(new MarkerOptions()
-                .position(new LatLng(latitude, longitude))
-                .anchor(0.5f, 0.5f)
-                .title(name)
-        );
     }
 
 
@@ -632,4 +629,41 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
 
     }
 
-}//on nsvigation end
+
+public void ifchecksuccess(){
+    gpsTracker = new Gpstracker(this);
+    if (gpsTracker.canGetLocation()) {
+        mLocation = gpsTracker.getLocation();
+        latitude = mLocation.getLatitude();
+        longitude = mLocation.getLongitude();
+        while(latitude==0.0 && longitude==0.0)
+        {
+            final Handler handler = new Handler();
+            handler.postDelayed(new Runnable() {
+                @Override
+                public void run() {
+                    latitude = mLocation.getLatitude();
+                    longitude = mLocation.getLongitude();
+                }
+            }, 100);
+        }
+        jsonObjectobj = new JSONObject();  //working code
+        try {
+            jsonObjectobj.put("table" , "location");
+            jsonObjectobj.put("uid" , Uid);
+            jsonObjectobj.put("lat" , String.valueOf(latitude));
+            jsonObjectobj.put("long" , String.valueOf(longitude));
+        }
+        catch (JSONException e) {
+            Log.d("JWP","Can't format JSON");
+        }
+        if (jsonObjectobj.length() > 0) {
+            new SendJsonDataToServer().execute(String.valueOf(jsonObjectobj));
+        }
+    }
+    else { gpsTracker.showSettingsAlert();
+    }
+
+}
+
+}

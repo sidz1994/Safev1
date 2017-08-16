@@ -31,7 +31,7 @@ public class Edit_profile_json_test extends AppCompatActivity implements View.On
     //search for text "ALERT" . sOME CHANGES MIGHT BE NEEDED WHERE EVER THEY ARE MENTIONED
 
     private Button submit;
-    private EditText name, number,age,email,pwd,msg;
+    private EditText name, number,age,msg;
     private Spinner blood,sex;
     //private Context mContext;
     Profile_Database profileDB;
@@ -44,8 +44,6 @@ public class Edit_profile_json_test extends AppCompatActivity implements View.On
         name=(EditText)findViewById(R.id.profile_name);
         number=(EditText)findViewById(R.id.profile_number);
         age=(EditText)findViewById(R.id.profile_age);
-        email=(EditText)findViewById(R.id.profile_email);
-        pwd=(EditText)findViewById(R.id.profile_password);
         msg=(EditText)findViewById(R.id.profile_msg);
         blood = (Spinner) findViewById(R.id.profile_blood);
         blood.setOnItemSelectedListener(this);
@@ -107,8 +105,6 @@ public class Edit_profile_json_test extends AppCompatActivity implements View.On
             jsonObjectobj.put("name" , name.getText().toString());
             jsonObjectobj.put("number", number.getText().toString());
             jsonObjectobj.put("age" , age.getText().toString());
-            jsonObjectobj.put("email" , email.getText().toString());
-            jsonObjectobj.put("pwd" , pwd.getText().toString());
             jsonObjectobj.put("msg" , msg.getText().toString());
             jsonObjectobj.put("blood" , blood_group);
             jsonObjectobj.put("sex" , sex_group);
@@ -158,19 +154,26 @@ public class Edit_profile_json_test extends AppCompatActivity implements View.On
         }
     }
 
-        public void load_data_database(){
-
-        if(check_all_values()){
-            boolean isInserted= profileDB.insertprofiledata(name.getText().toString(),number.getText().toString(),email.getText().toString() ,pwd.getText().toString() ,age.getText().toString() ,blood_group,msg.getText().toString(),sex_group);
-            if(isInserted){
-                Toast.makeText(this,"Profile created" ,Toast.LENGTH_SHORT).show();
-            }
-            else{
-                Toast.makeText(this,"Profile not created" ,Toast.LENGTH_SHORT).show();
-            }}
-    }
+        public void load_data_database()
+        {
+            String email="";
+            String pwd="";
+            if(check_all_values()){
+                if(getIntent().getExtras()!=null){
+                    Bundle extras = getIntent().getExtras();
+                    email= extras.getString("email");
+                    pwd=extras.getString("pwd");
+                }
+                boolean isInserted= profileDB.insertprofiledata(name.getText().toString(),number.getText().toString() ,age.getText().toString(),email,pwd ,blood_group,msg.getText().toString(),sex_group);
+                if(isInserted){
+                    Toast.makeText(this,"Profile created" ,Toast.LENGTH_SHORT).show();
+                }
+                else{
+                    Toast.makeText(this,"Profile not created" ,Toast.LENGTH_SHORT).show();
+                }}
+        }
     public boolean check_all_values(){
-        if (!(name.getText().toString().matches("") ||number.getText().toString().matches("") ||email.getText().toString().matches("") || pwd.getText().toString().matches("") || age.getText().toString().matches("") || blood_group.matches("---") ||msg.getText().toString().matches("") ||sex_group.matches("-----")))
+        if (!(name.getText().toString().matches("") ||number.getText().toString().matches("")  || age.getText().toString().matches("") || blood_group.matches("---") ||msg.getText().toString().matches("") ||sex_group.matches("-----")))
         {
             return true;
         }

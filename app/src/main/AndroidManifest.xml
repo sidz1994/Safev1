@@ -4,7 +4,6 @@
 
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
-    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
     <uses-permission android:name="com.example.bharath.safev1.permission.MAPS_RECEIVE" />
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
@@ -71,7 +70,9 @@
         <activity
             android:name=".Edit_profile_json_test"
             android:label="Profile" />
-        <activity android:name=".Notification_activity" />
+        <activity
+            android:name=".Notification_activity"
+            android:theme="@style/AppTheme.NoActionBar" />
         <activity android:name=".Settings" />
 
         <service
@@ -82,7 +83,7 @@
             android:name=".Stopservices_service"
             android:exported="false" />
 
-        <activity android:name=".Msgs_onclick"></activity>
+        <activity android:name=".Msgs_onclick" />
     </application>
 
 </manifest>

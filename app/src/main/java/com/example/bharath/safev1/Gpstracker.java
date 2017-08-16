@@ -16,8 +16,7 @@ import android.support.v7.app.AlertDialog;
 import android.util.Log;
 
 public class Gpstracker extends Service implements LocationListener {
-
-
+    private boolean isTerminationConditionMet = false;
     private final Context mContext;
 
     // flag for GPS status
@@ -75,7 +74,8 @@ public class Gpstracker extends Service implements LocationListener {
                 }else{
                     netStatus = "Disabled";
                 }
-                showSettingsAlert(netStatus,gpsStatus);
+                //showSettingsAlert(netStatus,gpsStatus);    //code changed here
+                showSettingsAlert();
 
                 // no network provider is enabled
             } else {
@@ -183,23 +183,37 @@ public class Gpstracker extends Service implements LocationListener {
         AlertDialog.Builder alertDialog = new AlertDialog.Builder(mContext);
 
         // Setting Dialog Title
-        alertDialog.setTitle("GPS is settings");
+        alertDialog.setTitle("GPS settings");
 
         // Setting Dialog Message
         alertDialog.setMessage("GPS is not enabled. Do you want to go to settings menu?");
-
-        /*
-        "To participate inDrop you need your location enabled." +
-                        "\n\nWe recommend enabling both GPS Satelite and mobile Network Location for improved accuracy." +
-                        "\n\nYour Current Settings" +
-                        "\nGPS: "+gpsStatus+
-                        "\nNetwork: "+netStatus*/
 
         // On pressing Settings button
         alertDialog.setPositiveButton("Settings", new DialogInterface.OnClickListener() {
             public void onClick(DialogInterface dialog,int which) {
                 Intent intent = new Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS);
                 mContext.startActivity(intent);
+               /* while(!locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)){
+                    try {
+                        Gpstracker.this.wait(1000);
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
+                }
+
+                final Handler handler = new Handler();
+                final Runnable task = new Runnable() {
+                    @Override
+                    public void run() {
+                        //code you want to run every second
+                        if (!locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)) {
+                            handler.postDelayed(task, 1000);
+                        }
+                    }
+                };
+                handler.postDelayed(task, 1000);*/
+
+                //startActivity(new Intent(mContext,MapsActivity.class));
             }
         });
 
@@ -213,6 +227,7 @@ public class Gpstracker extends Service implements LocationListener {
         // Showing Alert Message
         alertDialog.show();
     }
+
 
     @Override
     public void onLocationChanged(Location location) {
@@ -237,7 +252,7 @@ public class Gpstracker extends Service implements LocationListener {
     }
 
 
-    public void showSettingsAlert(String netStatus,String gpsStatus) {
+   /* public void showSettingsAlert(String netStatus,String gpsStatus) {
         AlertDialog.Builder alertDialog = new AlertDialog.Builder(mContext);
 
         // Setting Dialog Title
@@ -245,7 +260,7 @@ public class Gpstracker extends Service implements LocationListener {
 
         // Setting Dialog Message
         //alertDialog.setMessage("Location Service is not enabled. Do you want to go to settings menu?");
-        alertDialog.setMessage("To participate inDrop you need your location enabled." +
+        alertDialog.setMessage("You need to enable GPS for higher accuacy." +
                 "\n\nWe recommend enabling both GPS Satelite and mobile Network Location for improved accuracy." +
                         "\n\nYour Current Settings" +
                         "\nGPS: "+gpsStatus+
@@ -272,5 +287,5 @@ public class Gpstracker extends Service implements LocationListener {
         // Showing Alert Message
         alertDialog.show();
     }
-
+*/
 }

@@ -1,42 +1,83 @@
 package com.example.bharath.safev1;
 
-import android.app.ListActivity;
+import android.app.AlertDialog;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteException;
 import android.os.Bundle;
+import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
+import android.widget.AdapterView.OnItemLongClickListener;
 import android.widget.ArrayAdapter;
 import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
-import android.widget.AdapterView.OnItemLongClickListener;
+
 import java.util.ArrayList;
 
-public class Notification_activity extends ListActivity  {
+public class Notification_activity extends AppCompatActivity {
     private ArrayList<String> victim_Names= new ArrayList<String>();
     private ArrayList<String> victim_msg= new ArrayList<String>();
     private Context mContext;
     Notifications_Database myDB;
+    ListView listView;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         mContext = getApplicationContext();
-        setContentView(R.layout.tab1);
-        ListView listView= getListView();
+        setContentView(R.layout.noti_layout);
+        listView=(ListView)findViewById(R.id.list);
         listView.setOnItemLongClickListener(new OnItemLongClickListener() {
-            public boolean onItemLongClick(AdapterView<?> arg0, View arg1, int position, long id) {
-                Toast.makeText(getApplicationContext(), " " + position , Toast.LENGTH_LONG).show();
-
+            public boolean onItemLongClick(AdapterView<?> arg0, View arg1, final int position, long id) {
+                final String name=victim_Names.get(position);
+                AlertDialog.Builder altdial=new AlertDialog.Builder(Notification_activity.this);
+                altdial.setMessage("Do you want to delete "+name+"'s message?").setCancelable(false)
+                        .setPositiveButton("Yes", new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialog, int which) {
+                                int vals= myDB.deletemsg(position+1);
+                                if(vals==0)
+                                    getlistview();
+                                else
+                                    Toast.makeText(mContext,"No Messages",Toast.LENGTH_SHORT).show();
+                            }
+                        })
+                        .setNegativeButton("No", new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialog, int which) {
+                                dialog.cancel();
+                            }
+                        });
+                AlertDialog alert=altdial.create();
+                alert.setTitle("Delete Message");
+                alert.show();
                 return true;
             }
         });
+        listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> parent, View view, final int position, long id) {
+                Intent intent =new Intent(Notification_activity.this, Msgs_onclick.class);
+                Bundle bundle=new Bundle();
+                bundle.putString("name",victim_Names.get(position));
+                bundle.putString("msg",victim_msg.get(position));
+                intent.putExtras(bundle);
+                startActivity(intent);
+            }
+        });
 
+        getlistview();
+
+
+    }
+
+    private void getlistview(){
         try {
             myDB = new Notifications_Database(mContext);
             Cursor cursor = myDB.getAllData();
@@ -58,12 +99,10 @@ public class Notification_activity extends ListActivity  {
             myDB.close();
         }
 
-        setListAdapter(new MyAdapter(this, android.R.layout.simple_list_item_1,
+        listView.setAdapter(new MyAdapter(this, android.R.layout.simple_list_item_1,
                 R.id.tvNameMain, victim_Names));
 
     }
-
-
 
     private class MyAdapter extends ArrayAdapter<String> {
 
@@ -93,16 +132,5 @@ public class Notification_activity extends ListActivity  {
         }
 
     }
-
-    @Override
-    public void onListItemClick(ListView listView, View v, int position, long id) {
-        Intent intent =new Intent(this, Msgs_onclick.class);
-        Bundle bundle=new Bundle();
-        bundle.putString("name",victim_Names.get(position));
-        bundle.putString("msg",victim_msg.get(position));
-        intent.putExtras(bundle);
-        startActivity(intent);
-    }
-
 
 }

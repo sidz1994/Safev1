@@ -9,4 +9,11 @@
         myapp:actionViewClass="android.widget.SearchView"
         android:title="Search"
         />
+    <item
+        android:id="@+id/sync"
+        android:orderInCategory="2"
+        myapp:showAsAction="always"
+        android:title="sync">
+
+    </item>
 </menu>

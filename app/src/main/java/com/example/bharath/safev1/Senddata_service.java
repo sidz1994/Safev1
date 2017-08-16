@@ -38,6 +38,7 @@ public class Senddata_service extends Service  {
         {
             Log.e(TAG, "LocationListener " + provider);
             mLastLocation = new Location(provider);
+
           }
 
         @Override
@@ -97,14 +98,20 @@ public class Senddata_service extends Service  {
     public int onStartCommand(Intent intent, int flags, int startId)
     {
         super.onStartCommand(intent, flags, startId);
-        Uid=intent.getStringExtra("uid");
+        try {
+            if(intent.getStringExtra("uid")!=null)
+            {
+                Uid =intent.getStringExtra("uid");
+            };
+        }catch (NullPointerException e) {
+            e.printStackTrace();
+        }
         return START_STICKY;
     }
 
     @Override
     public void onCreate()
     {
-        
         Log.e(TAG, "onCreate");
         initializeLocationManager();
         try {
@@ -126,6 +133,7 @@ public class Senddata_service extends Service  {
         } catch (IllegalArgumentException ex) {
             Log.d(TAG, "gps provider does not exist " + ex.getMessage());
         }
+
     }
 
     @Override

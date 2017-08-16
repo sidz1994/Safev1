@@ -1,20 +1,15 @@
 package com.example.bharath.safev1;
 
-import android.content.ContentValues;
 import android.content.Context;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 
-import static com.example.bharath.safev1.DatabaseHelper.contacts_table;
-
 
 public class Notifications_Database extends SQLiteOpenHelper {
     private static final String database_name = "notifications.db";
     private static final String n_table = "notification";
-    private static final String n_uid = "uid";
-    private static final String n_name = "name";
-    private static final String n_msg = "msg";
+
 
     public Notifications_Database(Context context) {
         super(context, database_name, null, 1);
@@ -31,14 +26,6 @@ public class Notifications_Database extends SQLiteOpenHelper {
         onCreate(db);
     }
 
-    public void insertDataonce(String uid,String name,String msg) {
-        SQLiteDatabase db = this.getWritableDatabase();
-        ContentValues contentValues = new ContentValues();
-        contentValues.put(n_uid,uid);
-        contentValues.put(n_name,name);
-        contentValues.put(n_msg,msg);
-        db.insert(contacts_table,null ,contentValues);
-    }
 
     public void insertdata(String uid,String name,String msg){
         SQLiteDatabase db = this.getWritableDatabase();
@@ -53,5 +40,9 @@ public class Notifications_Database extends SQLiteOpenHelper {
     private int deleteData () {
         SQLiteDatabase db = this.getWritableDatabase();
         return db.delete(n_table, null,null);
+    }
+    public int  deletemsg (int rowid) {
+        SQLiteDatabase db = this.getWritableDatabase();
+        return db.delete(n_table,  "rowid="+rowid,null);
     }
 }

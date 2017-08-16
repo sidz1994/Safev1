@@ -7,7 +7,6 @@ import android.content.Intent;
 import android.media.RingtoneManager;
 import android.net.Uri;
 import android.os.Bundle;
-import android.os.Handler;
 import android.support.v4.app.NotificationCompat;
 
 import com.google.firebase.messaging.FirebaseMessagingService;
@@ -16,7 +15,6 @@ import com.google.firebase.messaging.RemoteMessage;
 
 
 public class FcmMessagingService extends FirebaseMessagingService {
-    private Handler mHandler;
     Notifications_Database notiDB;
 
 
@@ -37,7 +35,7 @@ public class FcmMessagingService extends FirebaseMessagingService {
         NotificationCompat.Builder notificationBuilder =new NotificationCompat.Builder(this);
         Uri alarmSound = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION);
         notificationBuilder.setSound(alarmSound);
-        notificationBuilder.setContentTitle(title+", needs help");
+        notificationBuilder.setContentTitle(uservals[0]+", needs help");
         notificationBuilder.setContentText(message);
         notificationBuilder.setAutoCancel(true);
         notificationBuilder.setSmallIcon(R.mipmap.ic_launcher);

@@ -55,7 +55,7 @@
         android:layout_height="wrap_content"
         android:layout_gravity="bottom|right"
         android:layout_marginBottom="10dp"
-        android:src="@drawable/ic_gps_myloc"
+        app:srcCompat="@drawable/ic_gps_myloc"
         android:layout_above="@+id/Alert"
         android:layout_alignParentRight="true"
         android:layout_alignParentEnd="true"

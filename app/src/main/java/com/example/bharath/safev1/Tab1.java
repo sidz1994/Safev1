@@ -36,11 +36,15 @@ public class Tab1 extends ListFragment implements SearchView.OnQueryTextListener
 
     private ArrayList<String> conNames;
     private ArrayList<String> conNumbers;
+    public static ArrayList<String> sendnumbers;
+    public static String onlynumber="";
+    public StringBuilder sb;
     private ArrayList<String> filterednames;
     private ArrayList<String> filterednumbers;
     private Cursor crContacts;
     private Context mContext;
     public static String Data="";
+    public static JSONObject jobj1;
     DatabaseHelper myDB;
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -62,10 +66,10 @@ public class Tab1 extends ListFragment implements SearchView.OnQueryTextListener
         super.onDetach();
     }
 
-    public static String getdata(){
-
-        return Data;
-    }
+    public static String getdata(){ return Data; }
+    public static JSONObject getjsonobj(){return jobj1;}
+    public static ArrayList<String> getcontacts(){return sendnumbers;}
+    public static String numbersinfo (){return onlynumber;}
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
@@ -78,6 +82,7 @@ public class Tab1 extends ListFragment implements SearchView.OnQueryTextListener
         String number ="";
         JSONObject jobj ;
         JSONArray arr = new JSONArray();
+        StringBuilder sb = new StringBuilder();
         while (!crContacts.isAfterLast()) {
             number=crContacts.getString(2).replaceAll("[()\\s-]+", "");
             if(!hm.containsKey(number)){
@@ -88,6 +93,7 @@ public class Tab1 extends ListFragment implements SearchView.OnQueryTextListener
                 try {
                     jobj.put("name",crContacts.getString(1));
                     jobj.put("number",crContacts.getString(2).replaceAll("[()\\s-]+", ""));
+                    sb.append(crContacts.getString(2).replaceAll("[()\\s-]+", ""));
                 } catch (JSONException e) {
                     e.printStackTrace();
                 }
@@ -97,11 +103,15 @@ public class Tab1 extends ListFragment implements SearchView.OnQueryTextListener
         }
         jobj = new JSONObject();
         try {
+            jobj.put("table","contacts");
             jobj.put("data", arr);
             Data=jobj.toString();
         } catch (JSONException e) {
             e.printStackTrace();
         }
+        sendnumbers=conNumbers;
+        jobj1=jobj;
+        onlynumber= sb.toString();
         setListAdapter(new MyAdapter(getContext(), android.R.layout.simple_list_item_1,
                 R.id.tvNameMain, conNames));
 
@@ -237,25 +247,25 @@ public class Tab1 extends ListFragment implements SearchView.OnQueryTextListener
                 AlertDialog.Builder altdial=new AlertDialog.Builder(mContext);
                 if (parent.getAdapter() instanceof MyAdapter)
                 {
-                altdial.setMessage("Do you want to add "+conNames.get(position)+" to trusted contacts?").setCancelable(false)
-                        .setPositiveButton("Yes", new DialogInterface.OnClickListener() {
-                            @Override
-                            public void onClick(DialogInterface dialog, int which) {
-                                boolean isInserted= myDB.insertData(conNames.get(position),conNumbers.get(position));
-                                if(isInserted){
-                                    Toast.makeText(mContext,conNames.get(position)+" added to trusted contacts" ,Toast.LENGTH_SHORT).show();
+                    altdial.setMessage("Do you want to add "+conNames.get(position)+" to trusted contacts?").setCancelable(false)
+                            .setPositiveButton("Yes", new DialogInterface.OnClickListener() {
+                                @Override
+                                public void onClick(DialogInterface dialog, int which) {
+                                    boolean isInserted= myDB.insertData(conNames.get(position),conNumbers.get(position));
+                                    if(isInserted){
+                                        Toast.makeText(mContext,conNames.get(position)+" added to trusted contacts" ,Toast.LENGTH_SHORT).show();
+                                    }
+                                    else{
+                                        Toast.makeText(mContext,conNames.get(position)+" not added to trusted contacts" ,Toast.LENGTH_SHORT).show();
+                                    }
                                 }
-                                else{
-                                    Toast.makeText(mContext,conNames.get(position)+" not added to trusted contacts" ,Toast.LENGTH_SHORT).show();
+                            })
+                            .setNegativeButton("No", new DialogInterface.OnClickListener() {
+                                @Override
+                                public void onClick(DialogInterface dialog, int which) {
+                                    dialog.cancel();
                                 }
-                            }
-                        })
-                        .setNegativeButton("No", new DialogInterface.OnClickListener() {
-                            @Override
-                            public void onClick(DialogInterface dialog, int which) {
-                                dialog.cancel();
-                            }
-                        });
+                            });
                 }
 
                 if (parent.getAdapter() instanceof NewAdapter)
@@ -286,5 +296,12 @@ public class Tab1 extends ListFragment implements SearchView.OnQueryTextListener
                 alert.show();
             }
         });
+    }
+
+    //hide specific menu items in layout
+    @Override
+    public void onPrepareOptionsMenu(Menu menu) {
+        MenuItem item=menu.findItem(R.id.sync);
+        item.setVisible(false);
     }
 }
