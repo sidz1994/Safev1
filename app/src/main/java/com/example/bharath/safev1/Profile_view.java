@@ -37,9 +37,9 @@ public class Profile_view extends AppCompatActivity implements View.OnClickListe
             {
                 read_name=cursor.getString(0);
                 read_number=cursor.getString(1);
-                read_email=cursor.getString(2);
-                read_pwd=cursor.getString(3);
-                read_age=cursor.getString(4);
+                read_age=cursor.getString(2);
+                read_email=cursor.getString(3);
+                read_pwd=cursor.getString(4);
                 read_blood=cursor.getString(5);
                 read_msg=cursor.getString(6);
                 read_sex=cursor.getString(7);

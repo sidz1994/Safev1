@@ -127,7 +127,8 @@ public class Tab2 extends ListFragment implements MenuItem.OnActionExpandListene
             HttpURLConnection urlConnection = null;
             URL url = null;
             try {
-                url = new URL(getString(R.string.URL));
+                if (isAdded())
+                    url = new URL(getString(R.string.URL));
             } catch (MalformedURLException e) {
                 e.printStackTrace();
             }

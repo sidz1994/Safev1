@@ -2,6 +2,7 @@ package com.example.bharath.safev1;
 
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.database.Cursor;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
@@ -31,11 +32,12 @@ public class Edit_profile_json_test extends AppCompatActivity implements View.On
     //search for text "ALERT" . sOME CHANGES MIGHT BE NEEDED WHERE EVER THEY ARE MENTIONED
 
     private Button submit;
-    private EditText name, number,age,msg;
+    private EditText name, number,age,msg,blood_other;
     private Spinner blood,sex;
     //private Context mContext;
     Profile_Database profileDB;
     String blood_group,sex_group;
+    String read_sex,read_blood,read_age,read_email;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -45,18 +47,21 @@ public class Edit_profile_json_test extends AppCompatActivity implements View.On
         number=(EditText)findViewById(R.id.profile_number);
         age=(EditText)findViewById(R.id.profile_age);
         msg=(EditText)findViewById(R.id.profile_msg);
+        blood_other=(EditText)findViewById(R.id.profile_blood_other);
         blood = (Spinner) findViewById(R.id.profile_blood);
         blood.setOnItemSelectedListener(this);
         // Spinner Drop down elements for blood
         List<String> categories = new ArrayList<String>();
-        categories.add("---");
+        categories.add("Select a blood group");
         categories.add("A+");
         categories.add("A-");
         categories.add("B+");
         categories.add("B-");
-        categories.add("AB");
+        categories.add("AB+");
+        categories.add("AB-");
         categories.add("O+");
         categories.add("O-");
+        categories.add("Other");
         categories.add("Don't Know");
         // Creating adapter for spinner
         ArrayAdapter<String> dataAdapter = new ArrayAdapter<String>(this, android.R.layout.simple_spinner_item, categories);
@@ -68,7 +73,7 @@ public class Edit_profile_json_test extends AppCompatActivity implements View.On
         sex = (Spinner) findViewById(R.id.profile_sex);
         sex.setOnItemSelectedListener(this);
         List<String> categories_Sex = new ArrayList<String>();
-        categories_Sex.add("-----");
+        categories_Sex.add("Select a gender");
         categories_Sex.add("Male");
         categories_Sex.add("Female");
         categories_Sex.add("Other");
@@ -78,6 +83,29 @@ public class Edit_profile_json_test extends AppCompatActivity implements View.On
         submit = (Button) findViewById(R.id.profile_submit);
         submit.setOnClickListener(this);
         submit.setEnabled(true);
+        Cursor cursor=profileDB.getAllData();
+        if (cursor.moveToFirst())
+        {
+            do
+            {
+                name.setText(cursor.getString(0));//read_name=;
+                number.setText(cursor.getString(1));//read_number=;
+                //read_email=cursor.getString(4);
+                age.setText(cursor.getString(2));//read_age=;
+                read_blood=cursor.getString(5);
+                if(!read_blood.equals("")){
+                    blood.setSelection(dataAdapter.getPosition(read_blood));
+                }
+                msg.setText(cursor.getString(6));
+                read_sex=cursor.getString(7);
+                if(!read_sex.equals("")){
+                    sex.setSelection(dataAdapter_sex.getPosition(read_sex));
+                }
+            } while (cursor.moveToNext());
+        }
+        cursor.close();
+
+
     }
 
     @Override
@@ -163,7 +191,15 @@ public class Edit_profile_json_test extends AppCompatActivity implements View.On
                     Bundle extras = getIntent().getExtras();
                     email= extras.getString("email");
                     pwd=extras.getString("pwd");
+                    SharedPreferences pref = getApplicationContext().getSharedPreferences("Options", MODE_PRIVATE);
+                    SharedPreferences.Editor editor=pref.edit();
+                    editor.putString("email", email);
+                    editor.putString("pwd", pwd);
+                    editor.apply();
                 }
+                SharedPreferences  pref=getApplication().getSharedPreferences("Options", MODE_PRIVATE);
+                email=pref.getString("email","");
+                pwd=pref.getString("pwd","");
                 boolean isInserted= profileDB.insertprofiledata(name.getText().toString(),number.getText().toString() ,age.getText().toString(),email,pwd ,blood_group,msg.getText().toString(),sex_group);
                 if(isInserted){
                     Toast.makeText(this,"Profile created" ,Toast.LENGTH_SHORT).show();
@@ -173,9 +209,14 @@ public class Edit_profile_json_test extends AppCompatActivity implements View.On
                 }}
         }
     public boolean check_all_values(){
-        if (!(name.getText().toString().matches("") ||number.getText().toString().matches("")  || age.getText().toString().matches("") || blood_group.matches("---") ||msg.getText().toString().matches("") ||sex_group.matches("-----")))
+        if (!(name.getText().toString().matches("") ||number.getText().toString().matches("")  || age.getText().toString().matches("") || blood_group.matches("Select a blood group") ||msg.getText().toString().matches("") ||sex_group.matches("Select a gender")))
         {
             return true;
+        }
+        if (blood_group.matches("Other") && (blood_other.getText().toString().matches("")))
+        {
+            Toast.makeText(this,"Blood Type is selected Other. Enter in text field" ,Toast.LENGTH_SHORT).show();
+            return false;
         }
         Toast.makeText(this,"Fill all Details" ,Toast.LENGTH_SHORT).show();
         return false;
@@ -185,7 +226,8 @@ public class Edit_profile_json_test extends AppCompatActivity implements View.On
     public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
         Spinner spinner = (Spinner) parent;
         if(spinner.getId() == R.id.profile_blood)
-        {blood_group = parent.getItemAtPosition(position).toString();}
+        {
+            blood_group = parent.getItemAtPosition(position).toString();}
         if (spinner.getId() == R.id.profile_sex)
         {sex_group=parent.getItemAtPosition(position).toString();}
     }

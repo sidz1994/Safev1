@@ -19,7 +19,7 @@ import com.google.firebase.auth.FirebaseAuth;
 public class RegsiterActivity extends AppCompatActivity {
 
     private EditText inputEmail, inputPassword;
-    private Button btnSignUp;
+    private Button btnSignup, btnLogin, btnReset;
     private ProgressBar progressBar;
     private FirebaseAuth auth;
     DatabaseHelper myDB;
@@ -30,16 +30,28 @@ public class RegsiterActivity extends AppCompatActivity {
         setContentView(R.layout.activity_regsiter);
         auth = FirebaseAuth.getInstance();
 
-        btnSignUp = (Button) findViewById(R.id.sign_up_button);
+
         inputEmail = (EditText) findViewById(R.id.email);
         inputPassword = (EditText) findViewById(R.id.password);
         progressBar = (ProgressBar) findViewById(R.id.progressBar);
-        btnSignUp.setOnClickListener(new View.OnClickListener() {
+        btnSignup = (Button) findViewById(R.id.sign_up_button);
+        btnLogin = (Button) findViewById(R.id.sign_in_button);
+        btnReset = (Button) findViewById(R.id.btn_reset_password);
+
+
+        btnReset.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                startActivity(new Intent(RegsiterActivity.this, Resetpassword.class));
+            }
+        });
+
+        btnSignup.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
 
-                String email = inputEmail.getText().toString().trim();
-                String password = inputPassword.getText().toString().trim();
+                final String email = inputEmail.getText().toString().trim();
+                final String password = inputPassword.getText().toString().trim();
 
                 if (TextUtils.isEmpty(email)) {
                     Toast.makeText(getApplicationContext(), "Enter email address!", Toast.LENGTH_SHORT).show();
@@ -64,14 +76,16 @@ public class RegsiterActivity extends AppCompatActivity {
                             public void onComplete(@NonNull Task<AuthResult> task) {
                                 Toast.makeText(RegsiterActivity.this, "Registered!", Toast.LENGTH_SHORT).show();
                                 progressBar.setVisibility(View.GONE);
-                                // If sign in fails, display a message to the user. If sign in succeeds
-                                // the auth state listener will be notified and logic to handle the
-                                // signed in user can be handled in the listener.
                                 if (!task.isSuccessful()) {
                                     Toast.makeText(RegsiterActivity.this, "Authentication failed." + task.getException(),
                                             Toast.LENGTH_SHORT).show();
                                 } else {
-                                    startActivity(new Intent(RegsiterActivity.this, MapsActivity.class));
+                                    Intent profile_intent = new Intent(RegsiterActivity.this, Edit_profile_json_test.class);
+                                    Bundle bundle = new Bundle();
+                                    bundle.putString("email", email);
+                                    bundle.putString("pwd", password);
+                                    profile_intent.putExtras(bundle);
+                                    startActivity(profile_intent);
                                     finish();
                                 }
                             }
@@ -80,7 +94,50 @@ public class RegsiterActivity extends AppCompatActivity {
             }
         });
 
+        btnLogin.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                final String email = inputEmail.getText().toString();
+                final String password = inputPassword.getText().toString();
 
+                if (TextUtils.isEmpty(email)) {
+                    Toast.makeText(getApplicationContext(), "Enter email address!", Toast.LENGTH_SHORT).show();
+                    return;
+                }
+
+                if (TextUtils.isEmpty(password)) {
+                    Toast.makeText(getApplicationContext(), "Enter password!", Toast.LENGTH_SHORT).show();
+                    return;
+                }
+
+                progressBar.setVisibility(View.VISIBLE);
+
+                //authenticate user
+                auth.signInWithEmailAndPassword(email, password)
+                        .addOnCompleteListener(RegsiterActivity.this, new OnCompleteListener<AuthResult>() {
+                            @Override
+                            public void onComplete(@NonNull Task<AuthResult> task) {
+                                progressBar.setVisibility(View.GONE);
+                                if (!task.isSuccessful()) {
+                                    // there was an error
+                                    if (password.length() < 6) {
+                                        inputPassword.setError(getString(R.string.minimum_password));
+                                    } else {
+                                        Toast.makeText(RegsiterActivity.this, getString(R.string.auth_failed), Toast.LENGTH_LONG).show();
+                                    }
+                                } else {
+                                    Intent profile_intent = new Intent(RegsiterActivity.this, Edit_profile_json_test.class);
+                                    Bundle bundle = new Bundle();
+                                    bundle.putString("email", email);
+                                    bundle.putString("pwd", password);
+                                    profile_intent.putExtras(bundle);
+                                    startActivity(profile_intent);
+                                    finish();
+                                }
+                            }
+                        });
+            }
+        });
 
     }
 }

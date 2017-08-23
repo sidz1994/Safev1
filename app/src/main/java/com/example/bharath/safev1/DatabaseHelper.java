@@ -17,7 +17,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 
     @Override
     public void onCreate(SQLiteDatabase db) {
-        db.execSQL("CREATE TABLE "+contacts_table+" (name text,number text)");
+        db.execSQL("CREATE TABLE "+contacts_table+" (number varchar(20) primary key,name varchar(20))");
     }
 
     @Override
@@ -35,6 +35,11 @@ public class DatabaseHelper extends SQLiteOpenHelper {
             return false;
         else
             return true;
+    }
+
+    public void insertdataonce(String name,String number){
+        SQLiteDatabase db = this.getWritableDatabase();
+        db.execSQL("insert or replace into trusted_contacts (number,name) values ('"+number+"','"+name+"');");
     }
     public Cursor getAllData() {
         SQLiteDatabase db = this.getWritableDatabase();

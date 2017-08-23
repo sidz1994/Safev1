@@ -55,7 +55,9 @@
             </intent-filter>
         </service>
 
-        <activity android:name=".RegsiterActivity" />
+        <activity
+            android:name=".RegsiterActivity"
+            android:theme="@style/AppTheme.NoActionBar" />
         <activity
             android:name=".NavigationMenu"
             android:label="@string/title_activity_navigation_menu"
@@ -66,14 +68,17 @@
             android:theme="@style/AppTheme.NoActionBar" />
         <activity
             android:name=".Profile_view"
+
             android:label="Profile" />
         <activity
             android:name=".Edit_profile_json_test"
             android:label="Profile" />
         <activity
             android:name=".Notification_activity"
-            android:theme="@style/AppTheme.NoActionBar" />
-        <activity android:name=".Settings" />
+            android:label="Notifications" />
+        <activity
+            android:name=".Settings"
+            android:label="Settings" />
 
         <service
             android:name=".Senddata_service"
@@ -84,6 +89,9 @@
             android:exported="false" />
 
         <activity android:name=".Msgs_onclick" />
+        <activity android:name=".Resetpassword"
+            android:theme="@style/AppTheme.NoActionBar">
+        </activity>
     </application>
 
 </manifest>

@@ -48,14 +48,14 @@ public class Tab3 extends ListFragment implements SearchView.OnQueryTextListener
         conNames = new ArrayList<String>();
         conNumbers = new ArrayList<String>();
         Cursor res = myDB.getAllData();
-        if(res.getCount() == 0) {
+        /*if(res.getCount() == 0) {
             showMessage("Message","No contacts added.");
-        }
+        }*/
 
         //StringBuffer buffer = new StringBuffer();
         while (res.moveToNext()) {
-            conNames.add(res.getString(0));
-            conNumbers.add(res.getString(1));
+            conNames.add(res.getString(1));
+            conNumbers.add(res.getString(0));
         }
         setListAdapter(new MyAdapter(getContext(), android.R.layout.simple_list_item_1,
                 R.id.tvNameMain, conNames));
@@ -137,6 +137,9 @@ public class Tab3 extends ListFragment implements SearchView.OnQueryTextListener
                                     conNames.remove(position);
                                     mAdapter.notifyDataSetChanged();
                                     Toast.makeText(mContext, "Contact removed", Toast.LENGTH_LONG).show();
+                                    setListAdapter(new MyAdapter(getContext(), android.R.layout.simple_list_item_1,
+                                            R.id.tvNameMain, conNames));
+
                                 }
                                 else
                                     Toast.makeText(mContext,"Contact not removed",Toast.LENGTH_LONG).show();

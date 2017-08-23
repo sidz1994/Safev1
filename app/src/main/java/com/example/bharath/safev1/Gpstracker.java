@@ -2,7 +2,6 @@ package com.example.bharath.safev1;
 
 import android.app.Service;
 import android.content.Context;
-import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.location.Location;
@@ -10,9 +9,7 @@ import android.location.LocationListener;
 import android.location.LocationManager;
 import android.os.Bundle;
 import android.os.IBinder;
-import android.provider.Settings;
 import android.support.v4.app.ActivityCompat;
-import android.support.v7.app.AlertDialog;
 import android.util.Log;
 
 public class Gpstracker extends Service implements LocationListener {
@@ -74,8 +71,8 @@ public class Gpstracker extends Service implements LocationListener {
                 }else{
                     netStatus = "Disabled";
                 }
-                //showSettingsAlert(netStatus,gpsStatus);    //code changed here
-                showSettingsAlert();
+                //showSettingsAlert(netStatus,gpsStatus);    //code changed here on 16th aug
+                //showSettingsAlert();   //code changed on 17th aug
 
                 // no network provider is enabled
             } else {
@@ -133,101 +130,28 @@ public class Gpstracker extends Service implements LocationListener {
         return location;
     }
 
-    /**
-     * Stop using GPS listener
-     * Calling this function will stop using GPS in your app
-     * */
-    public void stopUsingGPS(){
-        if(locationManager != null){
-            locationManager.removeUpdates(Gpstracker.this);
-        }
-    }
-
-    /**
-     * Function to get latitude
-     * */
-    public double getLatitude(){
-        if(location != null){
-            latitude = location.getLatitude();
-        }
-
-        // return latitude
-        return latitude;
-    }
-
-    /**
-     * Function to get longitude
-     * */
-    public double getLongitude(){
-        if(location != null){
-            longitude = location.getLongitude();
-        }
-
-        // return longitude
-        return longitude;
-    }
-
-    /**
-     * Function to check GPS/wifi enabled
-     * @return boolean
-     * */
     public boolean canGetLocation() {
         return this.canGetLocation;
     }
 
-    /**
-     * Function to show settings alert dialog
-     * On pressing Settings button will lauch Settings Options
-     * */
-    public void showSettingsAlert(){
+  /* public void showSettingsAlert(){
         AlertDialog.Builder alertDialog = new AlertDialog.Builder(mContext);
-
-        // Setting Dialog Title
         alertDialog.setTitle("GPS settings");
-
-        // Setting Dialog Message
         alertDialog.setMessage("GPS is not enabled. Do you want to go to settings menu?");
-
-        // On pressing Settings button
         alertDialog.setPositiveButton("Settings", new DialogInterface.OnClickListener() {
             public void onClick(DialogInterface dialog,int which) {
                 Intent intent = new Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS);
                 mContext.startActivity(intent);
-               /* while(!locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)){
-                    try {
-                        Gpstracker.this.wait(1000);
-                    } catch (InterruptedException e) {
-                        e.printStackTrace();
-                    }
-                }
-
-                final Handler handler = new Handler();
-                final Runnable task = new Runnable() {
-                    @Override
-                    public void run() {
-                        //code you want to run every second
-                        if (!locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)) {
-                            handler.postDelayed(task, 1000);
-                        }
-                    }
-                };
-                handler.postDelayed(task, 1000);*/
-
-                //startActivity(new Intent(mContext,MapsActivity.class));
             }
         });
-
-        // on pressing cancel button
         alertDialog.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
             public void onClick(DialogInterface dialog, int which) {
                 dialog.cancel();
             }
         });
-
-        // Showing Alert Message
         alertDialog.show();
     }
-
+*/
 
     @Override
     public void onLocationChanged(Location location) {

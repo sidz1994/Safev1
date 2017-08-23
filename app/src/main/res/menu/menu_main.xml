@@ -12,8 +12,9 @@
     <item
         android:id="@+id/sync"
         android:orderInCategory="2"
-        myapp:showAsAction="always"
-        android:title="sync">
+        myapp:showAsAction="ifRoom"
+        android:title="sync"
+        android:icon="@mipmap/ic_sync">
 
     </item>
 </menu>

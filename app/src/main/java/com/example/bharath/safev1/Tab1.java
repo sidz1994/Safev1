@@ -17,7 +17,6 @@ import android.widget.ArrayAdapter;
 import android.widget.ListView;
 import android.widget.SearchView;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -251,13 +250,14 @@ public class Tab1 extends ListFragment implements SearchView.OnQueryTextListener
                             .setPositiveButton("Yes", new DialogInterface.OnClickListener() {
                                 @Override
                                 public void onClick(DialogInterface dialog, int which) {
-                                    boolean isInserted= myDB.insertData(conNames.get(position),conNumbers.get(position));
+                                    /*boolean isInserted= myDB.insertData(conNames.get(position),conNumbers.get(position));
                                     if(isInserted){
                                         Toast.makeText(mContext,conNames.get(position)+" added to trusted contacts" ,Toast.LENGTH_SHORT).show();
                                     }
                                     else{
                                         Toast.makeText(mContext,conNames.get(position)+" not added to trusted contacts" ,Toast.LENGTH_SHORT).show();
-                                    }
+                                    }*/
+                                    myDB.insertdataonce(conNames.get(position),conNumbers.get(position));
                                 }
                             })
                             .setNegativeButton("No", new DialogInterface.OnClickListener() {
@@ -274,13 +274,14 @@ public class Tab1 extends ListFragment implements SearchView.OnQueryTextListener
                             .setPositiveButton("Yes", new DialogInterface.OnClickListener() {
                                 @Override
                                 public void onClick(DialogInterface dialog, int which) {
-                                    boolean isInserted= myDB.insertData(filterednames.get(position),filterednumbers.get(position));
+                                    /*boolean isInserted= myDB.insertData(filterednames.get(position),filterednumbers.get(position));
                                     if(isInserted){
                                         Toast.makeText(mContext,filterednames.get(position)+" added to trusted contacts" ,Toast.LENGTH_SHORT).show();
                                     }
                                     else{
                                         Toast.makeText(mContext,filterednames.get(position)+" not added to trusted contacts" ,Toast.LENGTH_SHORT).show();
-                                    }
+                                    }*/
+                                    myDB.insertdataonce(filterednames.get(position),filterednames.get(position));
                                 }
                             })
                             .setNegativeButton("No", new DialogInterface.OnClickListener() {

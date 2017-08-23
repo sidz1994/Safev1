@@ -26,12 +26,15 @@ public class Notification_activity extends AppCompatActivity {
     private ArrayList<String> victim_msg= new ArrayList<String>();
     private Context mContext;
     Notifications_Database myDB;
+    private MyAdapter arrayAdapter;
     ListView listView;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         mContext = getApplicationContext();
         setContentView(R.layout.noti_layout);
+        arrayAdapter = new MyAdapter(this, android.R.layout.simple_list_item_1,
+                R.id.tvNameMain, victim_Names);
         listView=(ListView)findViewById(R.id.list);
         listView.setOnItemLongClickListener(new OnItemLongClickListener() {
             public boolean onItemLongClick(AdapterView<?> arg0, View arg1, final int position, long id) {
@@ -43,7 +46,8 @@ public class Notification_activity extends AppCompatActivity {
                             public void onClick(DialogInterface dialog, int which) {
                                 int vals= myDB.deletemsg(position+1);
                                 if(vals==0)
-                                    getlistview();
+                                {arrayAdapter.notifyDataSetChanged();
+                                    getlistview();}
                                 else
                                     Toast.makeText(mContext,"No Messages",Toast.LENGTH_SHORT).show();
                             }
@@ -99,8 +103,9 @@ public class Notification_activity extends AppCompatActivity {
             myDB.close();
         }
 
-        listView.setAdapter(new MyAdapter(this, android.R.layout.simple_list_item_1,
-                R.id.tvNameMain, victim_Names));
+        /*listView.setAdapter(new MyAdapter(this, android.R.layout.simple_list_item_1,
+                R.id.tvNameMain, victim_Names));*/
+        listView.setAdapter(arrayAdapter);
 
     }
 
