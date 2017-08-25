@@ -48,18 +48,12 @@ public class Tab3 extends ListFragment implements SearchView.OnQueryTextListener
         conNames = new ArrayList<String>();
         conNumbers = new ArrayList<String>();
         Cursor res = myDB.getAllData();
-        /*if(res.getCount() == 0) {
-            showMessage("Message","No contacts added.");
-        }*/
-
-        //StringBuffer buffer = new StringBuffer();
         while (res.moveToNext()) {
             conNames.add(res.getString(1));
             conNumbers.add(res.getString(0));
         }
         setListAdapter(new MyAdapter(getContext(), android.R.layout.simple_list_item_1,
                 R.id.tvNameMain, conNames));
-        // showMessage("Data",buffer.toString());
         return rootView;
     }
 
@@ -72,13 +66,6 @@ public class Tab3 extends ListFragment implements SearchView.OnQueryTextListener
         getFragmentManager().popBackStack();
     }
 
-    public void showMessage(String title,String Message){
-        AlertDialog.Builder builder = new AlertDialog.Builder(mContext);
-        builder.setCancelable(true);
-        builder.setTitle(title);
-        builder.setMessage(Message);
-        builder.show();
-    }
 
     @Override
     public boolean onQueryTextSubmit(String query) {
@@ -131,7 +118,6 @@ public class Tab3 extends ListFragment implements SearchView.OnQueryTextListener
                         .setPositiveButton("Yes", new DialogInterface.OnClickListener() {
                             @Override
                             public void onClick(DialogInterface dialog, int which) {
-                                //Toast.makeText(mContext,conNames.get(position)+" added to trusted contacts" ,Toast.LENGTH_SHORT).show();
                                 Integer deletedRows = myDB.deleteData(conNames.get(position));
                                 if(deletedRows > 0) {
                                     conNames.remove(position);

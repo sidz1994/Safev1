@@ -21,6 +21,7 @@ import android.support.annotation.RequiresApi;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.NavigationView;
 import android.support.v4.app.ActivityCompat;
+import android.support.v4.content.ContextCompat;
 import android.support.v4.view.GravityCompat;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBarDrawerToggle;
@@ -47,11 +48,13 @@ import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.location.places.Place;
 import com.google.android.gms.location.places.ui.PlaceAutocompleteFragment;
 import com.google.android.gms.location.places.ui.PlaceSelectionListener;
+import com.google.android.gms.maps.CameraUpdate;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.model.LatLngBounds;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
@@ -93,20 +96,18 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
     String victim_name = "";
     private FirebaseAuth.AuthStateListener authListener;
     private FirebaseAuth auth;
-    private static final int MY_PERMISSION_REQUEST_READ_CONTACTS = 10;
-    private static final int MY_PERMISSION_REQUEST_ACCESS_FINE_LOCATION = 11;
-    private static final int MY_PERMISSION_REQUEST_ACCESS_COARSE_LOCATION = 12;
-    private final static int CONNECTION_FAILURE_RESOLUTION_REQUEST = 9000;
     Profile_Database profileDB;
-    //private ArrayList<Marker> mMarkerArray = new ArrayList<Marker>();
     JSONObject jsonObjectobj;
-    //private boolean onplaceselected = false;
     private ProgressBar progressBar;
     AlertDialog Dialog;
+    private ArrayList<MarkerOptions> mMarkerArray = new ArrayList<MarkerOptions>();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            checkPermission();
+        }
         setContentView(R.layout.activity_navigation_menu);
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
@@ -136,17 +137,14 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
         //code for registering phone and assigning userid
         auth = FirebaseAuth.getInstance();
         final FirebaseUser user = auth.getCurrentUser();
-      /*  if (user == null) {
+        if (user == null) {
             startActivity(new Intent(MapsActivity.this, RegsiterActivity.class));
             finish();
         }
         if (user != null) {
             Uid = user.getUid();
         }
-*/
-        //PERMISSIONS TO READ CONTACTS
 
-        getpermissions();
 
         //main activity starts here after registration
         alert = (Button) findViewById(R.id.Alert);
@@ -207,33 +205,38 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
         switch (requestCode) {
-            case MY_PERMISSION_REQUEST_READ_CONTACTS:
+            case 123:
+                if (ActivityCompat.shouldShowRequestPermissionRationale(this, Manifest.permission.ACCESS_COARSE_LOCATION)) {
+                    new AlertDialog.Builder(this).
+                            setTitle("Location Permission Required").
+                            setMessage("You need to grant location permission!").show();
+                }
+            case 456:
                 if (ActivityCompat.shouldShowRequestPermissionRationale(this, Manifest.permission.READ_CONTACTS)) {
                     new AlertDialog.Builder(this).
                             setTitle("Read Contacts Permission").
                             setMessage("You need to grant read contacts permission to read contacts feature. Retry and grant it!").show();
                 }
 
-            case MY_PERMISSION_REQUEST_ACCESS_FINE_LOCATION:
-                if (ActivityCompat.shouldShowRequestPermissionRationale(this, Manifest.permission.ACCESS_COARSE_LOCATION)) {
-                    new AlertDialog.Builder(this).
-                            setTitle("Location Fine Permission").
-                            setMessage("You need to grant read contacts permission to read contacts feature. Retry and grant it!").show();
-                }
-
-
-            case MY_PERMISSION_REQUEST_ACCESS_COARSE_LOCATION:
-                if (ActivityCompat.shouldShowRequestPermissionRationale(this, Manifest.permission.ACCESS_COARSE_LOCATION)) {
-                    new AlertDialog.Builder(this).
-                            setTitle("Location Coarse Permission").
-                            setMessage("You need to grant read contacts permission to read contacts feature. Retry and grant it!").show();
-                }
         }
     }
 
+    public void checkPermission() {
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED ||
+                ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED ||
+                ContextCompat.checkSelfPermission(this, Manifest.permission.READ_CONTACTS) != PackageManager.PERMISSION_GRANTED) {
+            ActivityCompat.requestPermissions(this,
+                    new String[]{Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION},
+                    123);
+            ActivityCompat.requestPermissions(this,
+                    new String[]{Manifest.permission.READ_CONTACTS},
+                    456);
+
+        }
+    }
 
     public void movetomylocation() {
-        mMap.clear();
+        //mMap.clear();
         if (gpsTracker.canGetLocation()) {
             mLocation = gpsTracker.getLocation();
             if (mLocation != null) {
@@ -268,6 +271,9 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
             }
         }
         if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            ActivityCompat.requestPermissions(this,
+                    new String[]{Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION},
+                    123);
             return;
         }
         mMap.setMyLocationEnabled(true);
@@ -275,9 +281,8 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
         LatLng myloc = new LatLng(latitude, longitude);
         postlat = String.valueOf(latitude);
         postlong = String.valueOf(longitude);
-        //Marker marker = null;
-/*        Marker marker= mMap.addMarker(new MarkerOptions().position(myloc).title("Current location"));
-        mMarkerArray.add(marker);*/
+        MarkerOptions marker= new MarkerOptions().position(myloc).title("Current location");
+        mMarkerArray.add(marker);
         if (getIntent().getExtras() != null) {
             String msg_String = "";
             String name_String = "";
@@ -293,38 +298,35 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
                 String[] uservals = locvals.split(",");
                 LatLng victimloc = new LatLng(Double.parseDouble(uservals[0]), Double.parseDouble(uservals[1]));
                 if (victim_name.isEmpty()) {
-                    mMap.addMarker(new MarkerOptions().position(victimloc).title("help needed here.."));
+                    marker=new MarkerOptions().position(victimloc).title("help needed here..");
+                    mMap.addMarker(marker);
                 } else
-                    mMap.addMarker(new MarkerOptions().position(victimloc).title(victim_name));
-
+                {  marker=new MarkerOptions().position(victimloc).title(victim_name);
+                    mMap.addMarker(marker);
+                }
             }
-            //mMarkerArray.add(marker);
-
-
-            /*LatLngBounds.Builder builder = new LatLngBounds.Builder();
-            for (Marker markers : mMarkerArray) {
+            mMarkerArray.add(marker);
+            LatLngBounds.Builder builder = new LatLngBounds.Builder();
+            for (MarkerOptions markers : mMarkerArray) {
                 builder.include(markers.getPosition());
             }
             LatLngBounds bounds = builder.build();
             int width = getResources().getDisplayMetrics().widthPixels;
             int height = getResources().getDisplayMetrics().heightPixels;
-            int padding = (int) (width * 0.12); // offset from edges of the map 12% of screen
+            int padding = (int) (width * 0.10); // offset from edges of the map 12% of screen
             CameraUpdate cu = CameraUpdateFactory.newLatLngBounds(bounds, width, height, padding);
-            mMap.moveCamera(cu);*/
+            mMap.moveCamera(cu);
+            mMarkerArray.remove(marker);
+            return;
         }
         Log.i("xnxx", "in mapready");
         mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(myloc, 15));
-
-        //mMap.getUiSettings().setMyLocationButtonEnabled(true);
-        //UiSettings.setZoomControlsEnabled(true);
-
     }
 
 
     @Override
     public void onPlaceSelected(Place place) {
         mMap.clear();
-        //onplaceselected=true;
         String userlatlng = String.valueOf(place.getLatLng());
         String requiredString = userlatlng.substring(userlatlng.indexOf("(") + 1, userlatlng.indexOf(")"));
         String[] uservals = requiredString.split(",");
@@ -392,9 +394,10 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
 
     @Override
     protected void onStop() {
-        mgoogleapiclient.disconnect();
         super.onStop();
-        AppIndex.AppIndexApi.end(mgoogleapiclient, getIndexApiAction());
+        if (mgoogleapiclient.isConnected()) {
+            mgoogleapiclient.disconnect();
+        }AppIndex.AppIndexApi.end(mgoogleapiclient, getIndexApiAction());
     }
 
     public Action getIndexApiAction() {
@@ -409,40 +412,26 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
                 .build();
     }
 
-    //below 5 are added here on july 9th
 
     @RequiresApi(api = Build.VERSION_CODES.M)
     @Override
     public void onConnected(Bundle bundle) {
         mlocrequest = LocationRequest.create();
         mlocrequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
-        mlocrequest.setInterval(1000);
+        mlocrequest.setInterval(5000);
+        mlocrequest.setFastestInterval(1000);
 
-        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED)
-            ActivityCompat.requestPermissions(this,new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, 108);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M )
+        {   if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED)
+                ActivityCompat.requestPermissions(this,
+                        new String[]{Manifest.permission.ACCESS_FINE_LOCATION,Manifest.permission.ACCESS_COARSE_LOCATION},123);
+        }
+
         Location location = LocationServices.FusedLocationApi.getLastLocation(mgoogleapiclient);
         if (location == null) {
             LocationServices.FusedLocationApi.requestLocationUpdates(mgoogleapiclient, mlocrequest, this);
         }
-
-       // LocationServices.FusedLocationApi.requestLocationUpdates(mgoogleapiclient, mlocrequest, this);
     }
-
-    /*@Override
-    public void onConnected(@Nullable Bundle bundle) {
-        mlocrequest = LocationRequest.create();
-        mlocrequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
-        mlocrequest.setInterval(1000);
-        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED)
-        {
-            ActivityCompat.requestPermissions(this,new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, 108);
-            //return;
-        }
-        Location location = LocationServices.FusedLocationApi.getLastLocation(mgoogleapiclient);
-        if (location == null) {
-            LocationServices.FusedLocationApi.requestLocationUpdates(mgoogleapiclient, mlocrequest, this);
-        }
-        }*/
 
     @Override
     public void onConnectionSuspended(int i) {
@@ -599,8 +588,7 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
         if (id == R.id.nav_profile) {
             int profile_counts = profileDB.getProfilesCount();
             if(profile_counts!=0){
-                Intent profile_intent=new Intent(MapsActivity.this,Profile_view.class);
-                startActivity(profile_intent);
+                startActivity(new Intent(MapsActivity.this,Profile_view.class));
             }
             else{
                 Intent profile_intent=new Intent(MapsActivity.this,Edit_profile_json_test.class);//changed here
@@ -608,16 +596,13 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
                 startActivity(profile_intent);
             }
         } else if (id == R.id.nav_contacts) {
-            Intent contacts_intent=new Intent(MapsActivity.this,Contacts_Activity_Main.class);
-            startActivity(contacts_intent);
+            startActivity(new Intent(MapsActivity.this,Contacts_Activity_Main.class));
         } else if (id == R.id.nav_logout) {
-            //profileDB.deleteData();
             FirebaseAuth.getInstance().signOut();
             startActivity(new Intent(MapsActivity.this,RegsiterActivity.class));
             finish();
         } else if (id == R.id.nav_notification) {
-            Intent notifi_intent=new Intent(MapsActivity.this,Notification_activity.class);
-            startActivity(notifi_intent);
+            startActivity(new Intent(MapsActivity.this,Notification_activity.class));
         } else if (id == R.id.nav_settings) {
             Intent settings_intent=new Intent(MapsActivity.this,Settings.class);
             settings_intent.putExtra("uid",Uid);
@@ -659,26 +644,6 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
     }
 
 
-    public void getpermissions()
-    {
-        if(ActivityCompat.checkSelfPermission(this, Manifest.permission.READ_CONTACTS)
-                != PackageManager.PERMISSION_GRANTED){
-            ActivityCompat.requestPermissions(this,
-                    new String[] {Manifest.permission.READ_CONTACTS}, MY_PERMISSION_REQUEST_READ_CONTACTS);
-        }
-
-        if(ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)
-                != PackageManager.PERMISSION_GRANTED || ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION)
-                != PackageManager.PERMISSION_GRANTED )
-        {
-            ActivityCompat.requestPermissions(this,
-                    new String[] {Manifest.permission.ACCESS_FINE_LOCATION}, MY_PERMISSION_REQUEST_ACCESS_FINE_LOCATION);
-            ActivityCompat.requestPermissions(this,
-                    new String[] {Manifest.permission.ACCESS_COARSE_LOCATION}, MY_PERMISSION_REQUEST_ACCESS_COARSE_LOCATION);
-        }
-
-    }
-
 
     public void show_map_when_gps_turned_off(){
         AlertDialog.Builder alertDialog = new AlertDialog.Builder(this);
@@ -706,8 +671,20 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
                         latitude=mLocation.getLatitude();
                         longitude=mLocation.getLongitude();
                         LatLng myloc = new LatLng(latitude, longitude);
-                        Log.i("xnxx","in end");
+                        //Log.i("xnxx","in end");
                         mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(myloc, 15));
+                        JSONObject jsonObjectobj = new JSONObject();  //working code
+                        try {
+                            jsonObjectobj.put("table", "location");
+                            jsonObjectobj.put("uid", Uid);
+                            jsonObjectobj.put("lat", String.valueOf(latitude));
+                            jsonObjectobj.put("long", String.valueOf(longitude));
+                        } catch (JSONException e) {
+                            Log.d("JWP", "Can't format JSON");
+                        }
+                        if (jsonObjectobj.length() > 0) {
+                            new SendJsonDataToServer().execute(String.valueOf(jsonObjectobj));
+                        }
                     }
 
                 }

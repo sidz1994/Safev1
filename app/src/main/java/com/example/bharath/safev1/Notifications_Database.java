@@ -37,12 +37,8 @@ public class Notifications_Database extends SQLiteOpenHelper {
         return res;
     }
 
-    private int deleteData () {
+    public int  deletemsg (String name) {
         SQLiteDatabase db = this.getWritableDatabase();
-        return db.delete(n_table, null,null);
-    }
-    public int  deletemsg (int rowid) {
-        SQLiteDatabase db = this.getWritableDatabase();
-        return db.delete(n_table,  "rowid="+rowid,null);
+        return db.delete(n_table,  "name= ?",new String[] {name});
     }
 }

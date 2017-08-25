@@ -23,8 +23,9 @@ public class FcmMessagingService extends FirebaseMessagingService {
         String title=remoteMessage.getNotification().getTitle();
         String message=remoteMessage.getNotification().getBody();
         notiDB=new Notifications_Database(this);
+        assert title != null;
         String[] uservals = title.split(":,:");
-        notiDB.insertdata(uservals[0],uservals[1],message);
+        notiDB.insertdata(uservals[1],uservals[0],message);
         Intent intent =new Intent(this, MapsActivity.class);
         intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
         Bundle bundle=new Bundle();

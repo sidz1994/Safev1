@@ -1,8 +1,14 @@
 package com.example.bharath.safev1;
 
+import android.Manifest;
 import android.content.Intent;
+import android.content.pm.PackageManager;
+import android.os.Build;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
+import android.support.v4.app.ActivityCompat;
+import android.support.v4.content.ContextCompat;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.text.TextUtils;
 import android.view.View;
@@ -30,7 +36,9 @@ public class RegsiterActivity extends AppCompatActivity {
         setContentView(R.layout.activity_regsiter);
         auth = FirebaseAuth.getInstance();
 
-
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M ) {
+            checkPermission();
+        }
         inputEmail = (EditText) findViewById(R.id.email);
         inputPassword = (EditText) findViewById(R.id.password);
         progressBar = (ProgressBar) findViewById(R.id.progressBar);
@@ -139,5 +147,39 @@ public class RegsiterActivity extends AppCompatActivity {
             }
         });
 
+    }
+
+    public void checkPermission(){
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED ||
+            ContextCompat.checkSelfPermission(this,Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED ||
+            ContextCompat.checkSelfPermission(this,Manifest.permission.READ_CONTACTS) != PackageManager.PERMISSION_GRANTED){
+
+
+            ActivityCompat.requestPermissions(this,
+                    new String[]{Manifest.permission.ACCESS_FINE_LOCATION,Manifest.permission.ACCESS_COARSE_LOCATION},
+                    123);
+            ActivityCompat.requestPermissions(this,
+                    new String[]{Manifest.permission.READ_CONTACTS},
+                    456);
+
+        }
+    }
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        switch (requestCode) {
+            case 123:
+                if (ActivityCompat.shouldShowRequestPermissionRationale(this, Manifest.permission.ACCESS_COARSE_LOCATION)) {
+                    new AlertDialog.Builder(this).
+                            setTitle("Location Permission Required").
+                            setMessage("You need to grant location permission!").show();
+                }
+            case 456:
+                if (ActivityCompat.shouldShowRequestPermissionRationale(this, Manifest.permission.READ_CONTACTS)) {
+                    new AlertDialog.Builder(this).
+                            setTitle("Read Contacts Permission").
+                            setMessage("You need to grant read contacts permission to read contacts feature. Retry and grant it!").show();
+                }
+
+        }
     }
 }

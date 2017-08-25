@@ -44,12 +44,16 @@ public class Notification_activity extends AppCompatActivity {
                         .setPositiveButton("Yes", new DialogInterface.OnClickListener() {
                             @Override
                             public void onClick(DialogInterface dialog, int which) {
-                                int vals= myDB.deletemsg(position+1);
-                                if(vals==0)
-                                {arrayAdapter.notifyDataSetChanged();
-                                    getlistview();}
+                                int vals= myDB.deletemsg(name);
+                                if(vals > 0) {
+                                    victim_Names.remove(position);
+                                    arrayAdapter.notifyDataSetChanged();
+                                    Toast.makeText(mContext, "Message deleted removed", Toast.LENGTH_LONG).show();
+                                    listView.setAdapter(new MyAdapter(mContext, android.R.layout.simple_list_item_1,
+                                            R.id.tvNameMain, victim_Names));
+                                }
                                 else
-                                    Toast.makeText(mContext,"No Messages",Toast.LENGTH_SHORT).show();
+                                    Toast.makeText(mContext,"Message not deleted",Toast.LENGTH_LONG).show();
                             }
                         })
                         .setNegativeButton("No", new DialogInterface.OnClickListener() {
